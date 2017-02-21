@@ -1,2 +1,2 @@
 # tjsdoc-runtime-common
-Provides the common shared runtime for TJSdoc.
+A forthcoming documentation tool.
