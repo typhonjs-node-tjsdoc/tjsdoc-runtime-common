@@ -1,39 +1,54 @@
 {
   "name": "tjsdoc-runtime-common",
   "version": "0.0.1",
-  "description": "A forthcoming documentation tool.",
-  "homepage": "https://github.com/typhonjs-node-tjsdoc/tjsdoc-runtime-common",
+  "description": "Provides the common shared runtime for TJSdoc.",
+  "author": "typhonrt",
+  "homepage": "https://tjsdoc.typhonjs.io/",
   "license": "MPL-2.0",
-  "author": {
-    "name": "typhonrt"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/typhonjs-node-tjsdoc/tjsdoc-runtime-common.git"
-  },
-  "maintainers": [
-    {
-      "name": "typhonrt",
-      "email": "support@typhonjs.io",
-      "url": "https://github.com/typhonrt"
-    }
-  ],
-  "dependencies": {
-  },
-  "devDependencies": {
-    "typhonjs-config-eslint": "^0.5.0",
-    "typhonjs-npm-build-test": "^0.4.0"
+    "url": "https://github.com/typhonjs-node-tjsdoc/tjsdoc-runtime-common"
   },
   "scripts": {
+    "build": "babel-node ./node_modules/typhonjs-npm-scripts-build-babel/scripts/build.js",
+    "eslint": "eslint .",
+    "dev-test": "BABEL_ENV=tjsdoc-dev babel-node ./node_modules/typhonjs-npm-scripts-test-mocha/scripts/mocha.js dev_test",
+    "dev-test-coverage": "BABEL_ENV=tjsdoc-dev babel-node ./node_modules/typhonjs-npm-scripts-test-mocha/scripts/mocha-istanbul.js dev_test",
+    "dev-test-npm": "BABEL_ENV=tjsdoc-dev babel-node ./node_modules/typhonjs-npm-scripts-test-mocha/scripts/mocha.js dev_test_npm",
+    "dev-tjsdoc": "BABEL_ENV=tjsdoc-dev babel-node ../tjsdoc/src/TJSDocCLI.js -c .tjsdocrc-local",
+    "prepublish": "babel-node ./node_modules/typhonjs-npm-scripts-publish/scripts/prepublish.js",
+    "test": "babel-node ./node_modules/typhonjs-npm-scripts-test-mocha/scripts/mocha.js",
+    "test-coverage": "babel-node ./node_modules/typhonjs-npm-scripts-test-mocha/scripts/mocha-istanbul.js"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.0.0",
+    "taffydb": "^2.0.0",
+    "tjsdoc-plugin-external-ecmascript": "<=0.1.0",
+    "typhonjs-config-resolver": "<=0.1.0",
+    "typhonjs-file-util": "<=0.1.0",
+    "typhonjs-package-util": "<=0.1.0",
+    "typhonjs-path-resolver": "<=0.1.0",
+    "typhonjs-ast-walker": "^0.2.0"
+  },
+  "devDependencies": {
+    "tjsdoc-test-utils": "git+https://git@github.com/typhonjs-node-tjsdoc/tjsdoc-test-utils.git",
+    "tjsdoc-tests-ecmascript": "git+https://git@github.com/typhonjs-node-tjsdoc/tjsdoc-tests-ecmascript.git",
+    "typhonjs-config-eslint": "^0.5.0",
+    "typhonjs-npm-build-test": "^0.6.0"
   },
   "keywords": [
+    "typhonjs",
+    "tjsdoc",
+    "runtime",
+    "common"
   ],
   "files": [
     "dist",
     "src",
+    ".tjsdocrc",
     "AUTHORS.md"
   ],
-  "directories": {},
+  "main": "dist/",
   "bugs": {
     "url": "https://github.com/typhonjs-node-tjsdoc/tjsdoc/issues"
   }

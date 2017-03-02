@@ -1,0 +1,38 @@
+{
+  "presets": ["latest", "stage-2"],
+
+  "plugins":
+  [
+    "add-module-exports",
+    ["module-resolver", {
+      "root": ["."],
+      "alias":
+      {
+      }
+    }],
+    "transform-runtime"
+  ],
+
+  "env":
+  {
+    "tjsdoc-dev":
+    {
+      "plugins":
+      [
+        "add-module-exports",
+        ["module-resolver", {
+          "root": ["."],
+          "cwd": "babelrc",
+          "alias":
+          {
+            "tjsdoc-docs-common": "../tjsdoc-docs-common/src/",
+
+            // Necessary for `dev-test-npm` script.
+            "tjsdoc-runtime-common/src": "./src"
+          }
+        }],
+        "transform-runtime"
+      ]
+    }
+  }
+}

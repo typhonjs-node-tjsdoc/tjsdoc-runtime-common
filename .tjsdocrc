@@ -1,0 +1,13 @@
+/* Some comments! You can include comments in TJSDoc config files */
+{
+  "source": "src",
+  "destination": "docs",
+  "access": ["public", "protected", "private"],
+  "builtinPluginVirtual": true,
+  "debug": false,
+  "emptyDestination": true,
+  "index": "./README.md",
+  "unexportIdentifier": true,
+
+  "title": "TJSDoc Runtime Common"
+}
