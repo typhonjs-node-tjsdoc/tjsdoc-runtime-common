@@ -2,12 +2,13 @@
 {
   "source": "src",
   "destination": "docs",
-  "access": ["public", "protected", "private"],
   "builtinPluginVirtual": true,
-  "debug": false,
   "emptyDestination": true,
-  "index": "./README.md",
   "unexportIdentifier": true,
 
-  "title": "TJSDoc Runtime Common"
+  "test":
+  {
+    "type": "mocha",
+    "source": "./node_modules/tjsdoc-tests-ecmascript/test/src/runtime-common"
+  }
 }
