@@ -211,8 +211,8 @@ export default class ConfigData
          'plugins': { required: false, test: 'array', expected:
           (entry) => eventbus.triggerSync('plugins:is:valid:config', entry), message: 'invalid plugin config' },
 
-          publisher: { required: false, test: 'entry', expected:
-           (entry) => (typeof entry === 'string' || typeof entry === 'object') },
+         'publisher': { required: false, test: 'entry', expected:
+          (entry) => (typeof entry === 'string' || typeof entry === 'object') },
 
          'scripts': { required: false, test: 'array', type: 'string' },
 
