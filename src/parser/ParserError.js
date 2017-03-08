@@ -1,7 +1,7 @@
 /**
  * Provides a generic parser error with start and end lines for the error.
  */
-export default class ParserError extends Error
+export class ParserError extends Error
 {
    /**
     * Instantiate ParserError.
@@ -36,4 +36,24 @@ export default class ParserError extends Error
 
       Object.freeze(this);
    }
+}
+
+/**
+ * When module loaded as a plugin add event binding to create a ParserError.
+ *
+ * @param {PluginEvent} ev - The plugin event.
+ */
+export function onPluginLoad(ev)
+{
+   /**
+    * Provides an event binding to create a ParserError.
+    */
+   ev.eventbus.on('tjsdoc:error:parser:create',
+    ({ line = void 0, column = void 0, message = void 0, position = void 0, fileName = void 0 } = {}) =>
+   {
+      if (!Number.isInteger(line)) { throw new TypeError(`'line' is not an 'integer'`); }
+      if (!Number.isInteger(column)) { throw new TypeError(`'column' is not an 'integer'`); }
+
+      return new ParserError(line, column, message, position, fileName);
+   });
 }

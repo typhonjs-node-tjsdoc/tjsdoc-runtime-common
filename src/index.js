@@ -1,9 +1,10 @@
 import ConfigData          from './ConfigData.js';
 
-import ParserError         from './parser/ParserError.js';
+import * as DocDB          from './doc/DocDB.js';
+
+import * as ParserError    from './parser/ParserError.js';
 
 import ASTNodeContainer    from './utils/ASTNodeContainer.js';
-import DocDB               from './utils/DocDB.js';
 import FileUtil            from './utils/FileUtil.js';
 import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
 import LintDocLogger       from './utils/LintDocLogger.js';
@@ -46,38 +47,15 @@ export function onPluginLoad(ev)
       },
 
       // Local plugins.
+      { name: 'tjsdoc-docdb', instance: DocDB },
       { name: 'tjsdoc-file-util', instance: new FileUtil() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
       { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
       { name: 'tjsdoc-node-container', instance: new ASTNodeContainer() },
+      { name: 'tjsdoc-parser-error', instance: ParserError },
       { name: 'tjsdoc-traverse-util', instance: new TraverseUtil() }
    ]);
-
-   /**
-    * Add doc database plugin with final doc data.
-    */
-   eventbus.on('tjsdoc:create:doc:db', (docData) =>
-   {
-      const docDB = new DocDB(docData);
-
-      eventbus.trigger('plugins:add', { name: 'tjsdoc-doc-database', instance: docDB });
-
-      // Allows any plugins to modify document database.
-      eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocDB', void 0, { docDB });
-   });
-
-   /**
-    * Provides an event binding to create a ParserError.
-    */
-   eventbus.on('tjsdoc:create:parser:error',
-    ({ line = void 0, column = void 0, message = void 0, position = void 0, fileName = void 0 } = {}) =>
-   {
-      if (!Number.isInteger(line)) { throw new TypeError(`'line' is not an 'integer'`); }
-      if (!Number.isInteger(column)) { throw new TypeError(`'column' is not an 'integer'`); }
-
-      return new ParserError(line, column, message, position, fileName);
-   });
 }
 
 /**
@@ -93,6 +71,5 @@ export function onRegenerate(ev)
 
    eventbus.trigger('tjsdoc:invalid:code:clear');
 
-   eventbus.trigger('plugins:remove', 'tjsdoc-doc-database');
    eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
 }

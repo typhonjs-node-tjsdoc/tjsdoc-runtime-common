@@ -5,7 +5,7 @@ import { taffy }  from 'taffydb';
  *
  * An onPluginLoad callback also wires up DocDB to an eventbus via {@link PluginManager}.
  */
-export default class DocDB
+export class DocDB
 {
    /**
     * Initializes the TaffyDB instance with given document data.
@@ -190,4 +190,17 @@ export default class DocDB
    {
       return this._docDB(query);
    }
+}
+
+/**
+ * Adds event binding to create a DocDB instance from docData / DocObject[].
+ *
+ * @param {PluginEvent} ev - The plugin event.
+ */
+export function onPluginLoad(ev)
+{
+   ev.eventbus.on('tjsdoc:data:docdb:create', (docData) =>
+   {
+      return new DocDB(docData);
+   });
 }
