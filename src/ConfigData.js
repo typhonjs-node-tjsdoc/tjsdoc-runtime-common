@@ -212,7 +212,7 @@ export default class ConfigData
           (entry) => eventbus.triggerSync('plugins:is:valid:config', entry), message: 'invalid plugin config' },
 
          'publisher': { required: false, test: 'entry', expected:
-          (entry) => (typeof entry === 'string' || typeof entry === 'object') },
+          (entry) => (typeof entry === 'string' || typeof entry === 'object') && entry !== null },
 
          'scripts': { required: false, test: 'array', type: 'string' },
 
@@ -223,6 +223,8 @@ export default class ConfigData
          'sourceFiles': { required: false, test: 'array', type: 'string' },
 
          'styles': { required: false, test: 'array', type: 'string' },
+
+         'test': { required: false, test: 'entry', expected: (entry) => entry !== null && typeof entry === 'object' },
 
          'test.excludes': { required: false, test: 'array', expected: (entry) => new RegExp(entry) },
 
