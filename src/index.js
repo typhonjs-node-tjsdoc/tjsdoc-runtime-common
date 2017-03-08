@@ -14,8 +14,6 @@ import TraverseUtil        from './utils/TraverseUtil.js';
  * Adds all common runtime plugins.
  *
  * @param {PluginEvent} ev - The plugin event.
- *
- * @ignore
  */
 export function onPluginLoad(ev)
 {
@@ -80,4 +78,21 @@ export function onPluginLoad(ev)
 
       return new ParserError(line, column, message, position, fileName);
    });
+}
+
+/**
+ * Handle any removal of data plugins for documentation regeneration.
+ *
+ * @param {PluginEvent} ev - The plugin event.
+ */
+export function onRegenerate(ev)
+{
+   const eventbus = ev.eventbus;
+
+   eventbus.trigger('tjsdoc:ast:nodes:clear');
+
+   eventbus.trigger('tjsdoc:invalid:code:clear');
+
+   eventbus.trigger('plugins:remove', 'tjsdoc-doc-database');
+   eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
 }
