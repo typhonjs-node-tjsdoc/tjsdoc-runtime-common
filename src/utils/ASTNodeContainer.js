@@ -38,6 +38,15 @@ export default class ASTNodeContainer
    }
 
    /**
+    * Clears any stored nodes.
+    */
+   clear()
+   {
+      this._nodes = {};
+      this._docId = 0;
+   }
+
+   /**
     * Gets an AST node by ID.
     *
     * @param {number}   id - An ID to retrieve a stored node.
@@ -58,7 +67,8 @@ export default class ASTNodeContainer
    {
       const eventbus = ev.eventbus;
 
-      eventbus.on('tjsdoc:ast:add:node', this.add, this);
-      eventbus.on('tjsdoc:ast:get:node', this.get, this);
+      eventbus.on('tjsdoc:ast:nodes:add', this.add, this);
+      eventbus.on('tjsdoc:ast:nodes:clear', this.clear, this);
+      eventbus.on('tjsdoc:ast:nodes:get', this.get, this);
    }
 }

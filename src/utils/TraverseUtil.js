@@ -66,7 +66,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:add:invalid:code', { code: actualCode, filePath, message, parserError });
+            this._eventbus.trigger('tjsdoc:invalid:code:add', { code: actualCode, filePath, message, parserError });
             return void 0;
          }
          else
@@ -90,7 +90,7 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:add:invalid:code', { code: actualCode, message, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:invalid:code:add', { code: actualCode, message, node, fatalError });
                }
                else
                {
@@ -137,7 +137,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:add:invalid:code', { filePath, parserError });
+            this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, parserError });
             return void 0;
          }
          else
@@ -161,7 +161,7 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:add:invalid:code', { filePath, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, node, fatalError });
                }
                else
                {
@@ -206,7 +206,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:add:invalid:code', { filePath, parserError });
+            this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, parserError });
             return void 0;
          }
          else
@@ -229,7 +229,7 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:add:invalid:code', { filePath, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, node, fatalError });
                }
                else
                {

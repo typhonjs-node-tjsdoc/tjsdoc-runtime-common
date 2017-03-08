@@ -17,7 +17,7 @@ export default class LintDocLogger
       {
          if (doc.undocument) { continue; }
 
-         const node = this._eventbus.triggerSync('tjsdoc:ast:get:node', doc.__docId__);
+         const node = this._eventbus.triggerSync('tjsdoc:ast:nodes:get', doc.__docId__);
 
          // Get AST / parser specific parsing of the node returning any method params.
          const codeParams = this._eventbus.triggerSync('tjsdoc:ast:get:method:params:from:node', node);
