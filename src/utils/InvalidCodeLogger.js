@@ -306,7 +306,7 @@ export default class InvalidCodeLogger
       const start = entry.parserError.line - 5;
       const end = entry.parserError.line + 3;
 
-      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:read:lines', entry.filePath, start, end);
+      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:lines:read', entry.filePath, start, end);
 
       this._eventbus.trigger(event, `${bodyColor}${targetLines.join('\n')}[0m`);
    }
