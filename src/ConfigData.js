@@ -200,7 +200,7 @@ export default class ConfigData
          'index': { required: false, test: 'entry', type: 'string' },
 
          'logLevel': { required: false, test: 'entry', expected:
-          (entry) => eventbus.triggerSync('log:is:valid:log:level', entry), message: 'invalid log level' },
+          (entry) => eventbus.triggerSync('log:level:is:valid', entry), message: 'invalid log level' },
 
          'outputASTData': { required: false, test: 'entry', type: 'boolean' },
 

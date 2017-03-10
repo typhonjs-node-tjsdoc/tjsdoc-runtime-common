@@ -23,7 +23,7 @@ export function onPluginLoad(ev)
    const resolverDataOverride = ev.pluginOptions.resolverData || {};
 
    // Instances are being loaded into the plugin manager so auto log filtering needs an explicit filter.
-   eventbus.trigger('log:add:filter', {
+   eventbus.trigger('log:filter:add', {
       type: 'inclusive',
       name: 'tjsdoc-runtime-common',
       filterString: '(tjsdoc-runtime-common\/dist|tjsdoc-runtime-common\/src)'
