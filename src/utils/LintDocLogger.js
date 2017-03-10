@@ -103,7 +103,7 @@ export default class LintDocLogger
       // Early out if there are no results to show.
       if (results.length <= 0) { return; }
 
-      const config = this._eventbus.triggerSync('tjsdoc:get:config');
+      const config = this._eventbus.triggerSync('tjsdoc:data:config:get');
 
       this._eventbus.trigger('log:warn:raw', '\n[33m==================================[0m');
       this._eventbus.trigger('log:warn:raw', `[33mLintDocLogger warnings:[0m`);

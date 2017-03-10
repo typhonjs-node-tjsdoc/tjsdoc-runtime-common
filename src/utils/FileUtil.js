@@ -44,7 +44,7 @@ export default class FileUtil
        */
       eventbus.on('tjsdoc:util:file:archive:create', (destPath, addToParent = true, silent = false) =>
       {
-         const config = eventbus.triggerSync('tjsdoc:get:config');
+         const config = eventbus.triggerSync('tjsdoc:data:config:get');
 
          // Allow config parameter `separateDataArchives` to override addToParent.
          addToParent = addToParent && !config.separateDataArchives;
