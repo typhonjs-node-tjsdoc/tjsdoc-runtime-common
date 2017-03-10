@@ -78,7 +78,7 @@ export default class TraverseUtil
       const factory = this._eventbus.triggerSync('tjsdoc:create:code:doc:factory', ast, actualCode, inDirPath,
        filePath);
 
-      this._eventbus.trigger('ast:walker:traverse', ast,
+      this._eventbus.trigger('typhonjs:ast:walker:traverse', ast,
       {
          enterNode: (node, parent) =>
          {
@@ -149,7 +149,7 @@ export default class TraverseUtil
       const factory = this._eventbus.triggerSync('tjsdoc:create:file:doc:factory', ast, inDirPath, filePath,
        packageName, mainFilePath);
 
-      this._eventbus.trigger('ast:walker:traverse', ast,
+      this._eventbus.trigger('typhonjs:ast:walker:traverse', ast,
       {
          enterNode: (node, parent) =>
          {
@@ -217,7 +217,7 @@ export default class TraverseUtil
 
       const factory = this._eventbus.triggerSync('tjsdoc:create:test:doc:factory', type, ast, inDirPath, filePath);
 
-      this._eventbus.trigger('ast:walker:traverse', ast,
+      this._eventbus.trigger('typhonjs:ast:walker:traverse', ast,
       {
          enterNode: (node, parent) =>
          {
