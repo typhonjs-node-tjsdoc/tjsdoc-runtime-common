@@ -11,13 +11,13 @@ export default class LintDocLogger
    exec()
    {
       const results = [];
-      const docs = this._eventbus.triggerSync('tjsdoc:docs:find', { kind: ['method', 'function'] });
+      const docs = this._eventbus.triggerSync('tjsdoc:data:docdb:find', { kind: ['method', 'function'] });
 
       for (const doc of docs)
       {
          if (doc.undocument) { continue; }
 
-         const node = this._eventbus.triggerSync('tjsdoc:ast:nodes:get', doc.__docId__);
+         const node = this._eventbus.triggerSync('tjsdoc:data:ast:nodes:get', doc.__docId__);
 
          // Get AST / parser specific parsing of the node returning any method params.
          const codeParams = this._eventbus.triggerSync('tjsdoc:ast:get:method:params:from:node', node);
@@ -88,7 +88,7 @@ export default class LintDocLogger
        */
       this._eventbus = ev.eventbus;
 
-      this._eventbus.on('tjsdoc:log:lint:doc:warnings', this.exec, this);
+      this._eventbus.on('tjsdoc:system:lint:docdb:log', this.exec, this);
    }
 
    /**

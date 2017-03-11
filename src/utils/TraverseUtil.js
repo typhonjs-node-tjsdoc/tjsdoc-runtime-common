@@ -23,6 +23,29 @@ export default class TraverseUtil
    }
 
    /**
+    * Store runtime data. Attempt to determine the name of the target project module name and any main file path.
+    *
+    * @param {PluginEvent}    ev - The plugin eventbus proxy.
+    */
+   onStart(ev)
+   {
+      /**
+       * @type {NPMPackageObject} - The target project package object.
+       */
+      const packageObj = ev.eventbus.triggerSync('tjsdoc:data:package:object:get');
+
+      /**
+       * @type {string} NPM package name of target project.
+       */
+      this._packageName = packageObj.name || void 0;
+
+      /**
+       * @type {string} NPM main file path of target project.
+       */
+      this._mainFilePath = packageObj.main || void 0;
+   }
+
+   /**
     * Traverse doc comments in given code.
     *
     * @param {string}         inDirPath - root directory path.
@@ -66,7 +89,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:invalid:code:add', { code: actualCode, filePath, message, parserError });
+            this._eventbus.trigger('tjsdoc:system:invalid:code:add', { code: actualCode, filePath, message, parserError });
             return void 0;
          }
          else
@@ -90,7 +113,8 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:invalid:code:add', { code: actualCode, message, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:system:invalid:code:add',
+                   { code: actualCode, message, node, fatalError });
                }
                else
                {
@@ -110,10 +134,6 @@ export default class TraverseUtil
     *
     * @param {string}   filePath - target JavaScript file path.
     *
-    * @param {string}   [packageName] - npm package name of target.
-    *
-    * @param {string}   [mainFilePath] - npm main file path of target.
-    *
     * @param {boolean}  [logErrors=true] - When true errors are silently logged with InvalidCodeLogger. When false
     *                                      parsing errors are thrown which is useful when watching files.
     *
@@ -125,7 +145,8 @@ export default class TraverseUtil
     *
     * @private
     */
-   traverseFile(inDirPath, filePath, packageName, mainFilePath, logErrors = true)
+   //traverseFile(inDirPath, filePath, packageName, mainFilePath, logErrors = true)
+   traverseFile(inDirPath, filePath, logErrors = true)
    {
       let ast;
 
@@ -137,7 +158,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, parserError });
+            this._eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
             return void 0;
          }
          else
@@ -147,7 +168,7 @@ export default class TraverseUtil
       }
 
       const factory = this._eventbus.triggerSync('tjsdoc:create:file:doc:factory', ast, inDirPath, filePath,
-       packageName, mainFilePath);
+       this._packageName, this._mainFilePath);
 
       this._eventbus.trigger('typhonjs:ast:walker:traverse', ast,
       {
@@ -161,7 +182,7 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, node, fatalError });
                }
                else
                {
@@ -206,7 +227,7 @@ export default class TraverseUtil
       {
          if (logErrors)
          {
-            this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, parserError });
+            this._eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
             return void 0;
          }
          else
@@ -229,7 +250,7 @@ export default class TraverseUtil
             {
                if (logErrors)
                {
-                  this._eventbus.trigger('tjsdoc:invalid:code:add', { filePath, node, fatalError });
+                  this._eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, node, fatalError });
                }
                else
                {

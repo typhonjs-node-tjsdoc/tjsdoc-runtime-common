@@ -67,9 +67,9 @@ export function onRegenerate(ev)
 {
    const eventbus = ev.eventbus;
 
-   eventbus.trigger('tjsdoc:ast:nodes:clear');
+   eventbus.trigger('tjsdoc:data:ast:nodes:clear');
 
-   eventbus.trigger('tjsdoc:invalid:code:clear');
+   eventbus.trigger('tjsdoc:system:invalid:code:clear');
 
    eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
 }

@@ -23,7 +23,7 @@ export default class FileUtil
        * @param {boolean}  [silent=false] - When true `output: <destPath>` is logged.
        * @param {encoding} [encoding=utf8] - The encoding type.
        */
-      eventbus.on('tjsdoc:util:file:write', (fileData, fileName, silent = false, encoding = 'utf8') =>
+      eventbus.on('tjsdoc:system:file:write', (fileData, fileName, silent = false, encoding = 'utf8') =>
       {
          fileData = eventbus.triggerSync('plugins:invoke:sync:event', 'onHandleWriteFile', void 0,
             { fileData, fileName }).fileData;
@@ -42,7 +42,7 @@ export default class FileUtil
        *
        * @param {boolean}  [silent=false] - When true `output: <destPath>` is logged.
        */
-      eventbus.on('tjsdoc:util:file:archive:create', (destPath, addToParent = true, silent = false) =>
+      eventbus.on('tjsdoc:system:file:archive:create', (destPath, addToParent = true, silent = false) =>
       {
          const config = eventbus.triggerSync('tjsdoc:data:config:get');
 

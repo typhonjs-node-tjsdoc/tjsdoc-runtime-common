@@ -170,12 +170,12 @@ export class DocDB
     */
    onPluginLoad(ev)
    {
-      ev.eventbus.on('tjsdoc:docs:find', this.find, this);
-      ev.eventbus.on('tjsdoc:docs:find:access:docs', this.findAccessDocs, this);
-      ev.eventbus.on('tjsdoc:docs:find:all:identifiers:kind:grouping', this.findAllIdentifiersKindGrouping, this);
-      ev.eventbus.on('tjsdoc:docs:find:by:name', this.findByName, this);
-      ev.eventbus.on('tjsdoc:docs:find:sorted', this.findSorted, this);
-      ev.eventbus.on('tjsdoc:docs:query', this.query, this);
+      ev.eventbus.on('tjsdoc:data:docdb:find', this.find, this);
+      ev.eventbus.on('tjsdoc:data:docdb:find:access:docs', this.findAccessDocs, this);
+      ev.eventbus.on('tjsdoc:data:docdb:find:all:identifiers:kind:grouping', this.findAllIdentifiersKindGrouping, this);
+      ev.eventbus.on('tjsdoc:data:docdb:find:by:name', this.findByName, this);
+      ev.eventbus.on('tjsdoc:data:docdb:find:sorted', this.findSorted, this);
+      ev.eventbus.on('tjsdoc:data:docdb:query', this.query, this);
    }
 
    /**

@@ -142,11 +142,11 @@ export default class InvalidCodeLogger
    /**
     * Wires up InvalidCodeLogger on the plugin eventbus. The following event bindings are available:
     *
-    * `tjsdoc:invalid:code:add`: Takes a data object which adds an invalid code object to be stored.
+    * `tjsdoc:system:invalid:code:add`: Takes a data object which adds an invalid code object to be stored.
     *
-    * `tjsdoc:invalid:code:clear`: Clears any currently logged invalid code.
+    * `tjsdoc:system:invalid:code:clear`: Clears any currently logged invalid code.
     *
-    * `tjsdoc:invalid:code:log`: Invokes `log:error:raw` or `log:warn:raw` with the formatted data.
+    * `tjsdoc:system:invalid:code:log`: Invokes `log:error:raw` or `log:warn:raw` with the formatted data.
     *
     * @param {PluginEvent} ev - The plugin event.
     */
@@ -158,11 +158,11 @@ export default class InvalidCodeLogger
        */
       this._eventbus = ev.eventbus;
 
-      this._eventbus.on('tjsdoc:invalid:code:add', this.addInvalidCode, this);
+      this._eventbus.on('tjsdoc:system:invalid:code:add', this.addInvalidCode, this);
 
-      this._eventbus.on('tjsdoc:invalid:code:clear', this.clearLog, this);
+      this._eventbus.on('tjsdoc:system:invalid:code:clear', this.clearLog, this);
 
-      this._eventbus.on('tjsdoc:invalid:code:log', this.logInvalidCode, this);
+      this._eventbus.on('tjsdoc:system:invalid:code:log', this.logInvalidCode, this);
    }
 
    /**

@@ -50,6 +50,6 @@ export default class NamingUtil
    {
       const eventbus = ev.eventbus;
 
-      eventbus.on('tjsdoc:filepath:to:name', this.filePathToName, this);
+      eventbus.on('tjsdoc:system:filepath:to:name', this.filePathToName, this);
    }
 }

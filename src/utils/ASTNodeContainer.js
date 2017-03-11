@@ -67,8 +67,8 @@ export default class ASTNodeContainer
    {
       const eventbus = ev.eventbus;
 
-      eventbus.on('tjsdoc:ast:nodes:add', this.add, this);
-      eventbus.on('tjsdoc:ast:nodes:clear', this.clear, this);
-      eventbus.on('tjsdoc:ast:nodes:get', this.get, this);
+      eventbus.on('tjsdoc:data:ast:nodes:add', this.add, this);
+      eventbus.on('tjsdoc:data:ast:nodes:clear', this.clear, this);
+      eventbus.on('tjsdoc:data:ast:nodes:get', this.get, this);
    }
 }
