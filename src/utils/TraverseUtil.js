@@ -145,7 +145,6 @@ export default class TraverseUtil
     *
     * @private
     */
-   //traverseFile(inDirPath, filePath, packageName, mainFilePath, logErrors = true)
    traverseFile(inDirPath, filePath, logErrors = true)
    {
       let ast;
