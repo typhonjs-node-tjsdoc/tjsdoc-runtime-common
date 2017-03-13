@@ -6,10 +6,11 @@ import * as ParserError    from './parser/ParserError.js';
 
 import ASTNodeContainer    from './utils/ASTNodeContainer.js';
 import FileUtil            from './utils/FileUtil.js';
+import GenerateDocData     from './utils/GenerateDocData.js';
 import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
 import LintDocLogger       from './utils/LintDocLogger.js';
 import NamingUtil          from './utils/NamingUtil.js';
-import TraverseUtil        from './utils/TraverseUtil.js';
+import PathResolver        from './utils/PathResolver.js';
 
 /**
  * Adds all common runtime plugins.
@@ -33,14 +34,14 @@ export function onPluginLoad(ev)
       // External plugins.
       { name: 'tjsdoc-docs-common', instance: require('tjsdoc-docs-common'), options: { logAutoFilter: false } },
       { name: 'typhonjs-ast-walker', instance: require('typhonjs-ast-walker'), options: { logAutoFilter: false } },
+      { name: 'typhonjs-object-util', instance: require('typhonjs-object-util') },
       { name: 'typhonjs-package-util', instance: require('typhonjs-package-util') },
-      { name: 'typhonjs-path-resolver', instance: require('typhonjs-path-resolver') },
       {
          name: 'tjsdoc-config-resolver',
          instance: require('typhonjs-config-resolver'),
          options:
          {
-            eventPrepend: 'tjsdoc',
+            eventPrepend: 'tjsdoc:system',
             logEvent: 'log:info:raw',
             resolverData: ConfigData.createResolverData(ev.eventbus, resolverDataOverride)
          }
@@ -49,12 +50,13 @@ export function onPluginLoad(ev)
       // Local plugins.
       { name: 'tjsdoc-docdb', instance: DocDB },
       { name: 'tjsdoc-file-util', instance: new FileUtil() },
+      { name: 'tjsdoc-generate-docdata', instance: new GenerateDocData() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
       { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
       { name: 'tjsdoc-node-container', instance: new ASTNodeContainer() },
       { name: 'tjsdoc-parser-error', instance: ParserError },
-      { name: 'tjsdoc-traverse-util', instance: new TraverseUtil() }
+      { name: 'tjsdoc-path-resolver', instance: new PathResolver() }
    ]);
 }
 
