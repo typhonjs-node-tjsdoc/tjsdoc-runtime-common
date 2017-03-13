@@ -88,7 +88,7 @@ export default class InvalidCodeLogger
          data.node = JSON.parse(JSON.stringify(data.node));
 
          // Sanitize node removing all children except comments, type, and range data.
-         this._eventbus.trigger('tjsdoc:ast:node:sanitize:children', data.node);
+         this._eventbus.trigger('tjsdoc:system:ast:node:sanitize:children', data.node);
       }
 
       // Determine type of invalid code.
@@ -273,8 +273,8 @@ export default class InvalidCodeLogger
     */
    _showCodeNode(entry, event, bodyColor)
    {
-      const result = this._eventbus.triggerSync('tjsdoc:ast:get:code:comment:and:first:line:from:node', entry.code,
-       entry.node, true);
+      const result = this._eventbus.triggerSync('tjsdoc:system:ast:code:comment:first:line:from:node:get',
+       entry.code, entry.node, true);
 
       this._eventbus.trigger(event, `${bodyColor}${result.text}[0m`);
    }
@@ -328,8 +328,8 @@ export default class InvalidCodeLogger
     */
    _showFileNode(entry, event, bodyColor)
    {
-      const result = this._eventbus.triggerSync('tjsdoc:ast:get:file:comment:and:first:line:from:node', entry.filePath,
-       entry.node, true);
+      const result = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
+       entry.filePath, entry.node, true);
 
       this._eventbus.trigger(event, `${bodyColor}${result.text}[0m`);
    }

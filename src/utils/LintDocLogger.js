@@ -20,7 +20,7 @@ export default class LintDocLogger
          const node = this._eventbus.triggerSync('tjsdoc:data:ast:nodes:get', doc.__docId__);
 
          // Get AST / parser specific parsing of the node returning any method params.
-         const codeParams = this._eventbus.triggerSync('tjsdoc:ast:get:method:params:from:node', node);
+         const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', node);
 
          const docParams = this._getParamsFromDoc(doc);
 
@@ -117,7 +117,7 @@ export default class LintDocLogger
          const name = doc.longname.split('~')[1];
          const absFilePath = path.resolve(config._dirPath, filePath);
 
-         const comment = this._eventbus.triggerSync('tjsdoc:ast:get:file:comment:and:first:line:from:node',
+         const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
           absFilePath, node);
 
          this._eventbus.trigger('log:warn:raw',
