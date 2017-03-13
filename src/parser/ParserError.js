@@ -48,7 +48,7 @@ export function onPluginLoad(ev)
    /**
     * Provides an event binding to create a ParserError.
     */
-   ev.eventbus.on('tjsdoc:error:parser:create',
+   ev.eventbus.on('tjsdoc:system:error:parser:create',
     ({ line = void 0, column = void 0, message = void 0, position = void 0, fileName = void 0 } = {}) =>
    {
       if (!Number.isInteger(line)) { throw new TypeError(`'line' is not an 'integer'`); }

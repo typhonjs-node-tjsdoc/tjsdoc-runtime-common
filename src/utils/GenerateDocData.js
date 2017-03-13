@@ -226,7 +226,7 @@ const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:create:code:doc:factory', ast, actualCode, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:code:create', ast, actualCode, filePath);
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {
@@ -293,7 +293,7 @@ const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:create:file:doc:factory', ast, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:file:create', ast, filePath);
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {
@@ -362,7 +362,7 @@ const s_TRAVERSE_TEST = (type, filePath, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:create:test:doc:factory', type, ast, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:test:create', type, ast, filePath);
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {

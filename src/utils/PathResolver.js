@@ -1,7 +1,7 @@
 import Resolver from 'typhonjs-path-resolver';
 
 /**
- * Wraps `typhonjs-path-resolver` as a plugin providing an event binding `tjsdoc:create:path:resolver` which sets
+ * Wraps `typhonjs-path-resolver` as a plugin providing an event binding `tjsdoc:system:path:resolver:create` which sets
  * the NPM package name and main file path from the target project `package.json`.
  */
 export default class PathResolver
@@ -15,7 +15,7 @@ export default class PathResolver
     */
    onPluginLoad(ev)
    {
-      ev.eventbus.on('tjsdoc:create:path:resolver',
+      ev.eventbus.on('tjsdoc:system:path:resolver:create',
        (filePath, rootPath = this._rootPath, packageName = this._packageName, mainFilePath = this._mainFilePath) =>
       {
          return new Resolver(rootPath, filePath, packageName, mainFilePath);
