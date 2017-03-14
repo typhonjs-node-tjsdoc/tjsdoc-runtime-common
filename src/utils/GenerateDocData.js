@@ -211,7 +211,7 @@ const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
 
    try
    {
-      ast = eventbus.triggerSync('tjsdoc:parse:code', actualCode);
+      ast = eventbus.triggerSync('tjsdoc:system:parser:code:source:parse', actualCode);
    }
    catch (parserError)
    {
@@ -278,7 +278,7 @@ const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
 
    try
    {
-      ast = eventbus.triggerSync('tjsdoc:parse:file', filePath);
+      ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
    }
    catch (parserError)
    {
@@ -347,7 +347,7 @@ const s_TRAVERSE_TEST = (type, filePath, eventbus, handleError) =>
 
    try
    {
-      ast = eventbus.triggerSync('tjsdoc:parse:file', filePath);
+      ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
    }
    catch (parserError)
    {
