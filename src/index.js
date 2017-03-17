@@ -69,7 +69,7 @@ export function onRegenerate(ev)
 {
    const eventbus = ev.eventbus;
 
-   eventbus.trigger('tjsdoc:data:ast:nodes:clear');
+   eventbus.triggerSync('tjsdoc:data:ast:node:container:get').clear();
 
    eventbus.trigger('tjsdoc:system:invalid:code:clear');
 

@@ -12,12 +12,13 @@ export default class LintDocLogger
    {
       const results = [];
       const docs = this._eventbus.triggerSync('tjsdoc:data:docdb:find', { kind: ['method', 'function'] });
+      const astNodeContainer = this._eventbus.triggerSync('tjsdoc:data:ast:node:container:get');
 
       for (const doc of docs)
       {
          if (doc.undocument) { continue; }
 
-         const node = this._eventbus.triggerSync('tjsdoc:data:ast:nodes:get', doc.__docId__);
+         const node = astNodeContainer.get(doc.__docId__);
 
          // Get AST / parser specific parsing of the node returning any method params.
          const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', node);

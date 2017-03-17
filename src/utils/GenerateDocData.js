@@ -1,4 +1,6 @@
-import path from 'path';
+import path             from 'path';
+
+import ASTNodeContainer from './ASTNodeContainer.js';
 
 /**
  * Provides event bindings to generate DocObject and AST data for in memory code and files for main and tests.
@@ -40,21 +42,24 @@ export default class GenerateDocData
    /**
     * Generates doc data from the given source code.
     *
-    * @param {string}         code - Source code to parse.
+    * @param {string}            code - Source code to parse.
     *
-    * @param {DocObject[]}    [docData] - DocObject data is pushed to this array.
+    * @param {DocObject[]}       [docData] - DocObject data is pushed to this array.
     *
-    * @param {ASTData[]}      [astData] - AST data is pushed to this array.
+    * @param {ASTData[]}         [astData] - AST data is pushed to this array.
     *
-    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
-    *                                                 with the default being to throw any errors encountered.
+    * @param {ASTNodeContainer}  [astNodeContainer] - All doc object AST nodes are added to this object.
+    *
+    * @param {string}            [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    *                                                    with the default being to throw any errors encountered.
     *
     * @returns {*}
     */
-   generateCodeDocData(code, docData = [], astData = [], handleError = 'throw')
+   generateCodeDocData({ code = void 0, docData = [], astData = [], astNodeContainer = new ASTNodeContainer(),
+    handleError = 'throw' } = {})
    {
       // Traverse the file generating doc data.
-      const result = s_TRAVERSE_CODE(code, this._eventbus, handleError);
+      const result = s_TRAVERSE_CODE(code, astNodeContainer, this._eventbus, handleError);
 
       // Push any generated doc and AST data output.
       if (result)
@@ -64,25 +69,35 @@ export default class GenerateDocData
          astData.push({ filePath: 'unknown', ast: result.ast });
       }
 
-      return { docData, astData };
+      return { docData, astData, astNodeContainer };
    }
 
    /**
     * Generates doc data from a file path and supporting data.
     *
-    * @param {string}         filePath - Doc data is generated from this file path.
+    * @param {string}            filePath - Doc data is generated from this file path.
     *
-    * @param {DocObject[]}    [docData] - DocObject data is pushed to this array.
+    * @param {DocObject[]}       [docData] - DocObject data is pushed to this array.
     *
-    * @param {ASTData[]}      [astData] - AST data is pushed to this array.
+    * @param {ASTData[]}         [astData] - AST data is pushed to this array.
     *
-    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
-    *                                                 with the default being to throw any errors encountered.
+    * @param {ASTNodeContainer}  [astNodeContainer] - All doc object AST nodes are added to this object.
+    *
+    * @param {string}            [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    *                                                    with the default being to throw any errors encountered.
+    *
+    * @param {boolean}           [log=true] - If true a log statement is emitted.
     *
     * @returns {*}
     */
-   generateFileDocData(filePath, docData = [], astData = [], handleError = 'throw')
+   generateFileDocData({ filePath = void 0, docData = [], astData = [], astNodeContainer = new ASTNodeContainer(),
+    handleError = 'throw', log = true } = {})
    {
+      if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
+      if (!Array.isArray(docData)) { throw new TypeError(`'docData' is not an 'array'.`); }
+      if (!Array.isArray(astData)) { throw new TypeError(`'astData' is not an 'array'.`); }
+      if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
+
       const relativeFilePath = path.relative(this._config._dirPath, filePath);
 
       let match = false;
@@ -104,10 +119,10 @@ export default class GenerateDocData
          if (relativeFilePath.match(reg)) { return void 0; }
       }
 
-      this._eventbus.trigger('log:info:raw', `parse: ${filePath}`);
+      if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
       // Traverse the file generating doc data.
-      const result = s_TRAVERSE_FILE(filePath, this._eventbus, handleError);
+      const result = s_TRAVERSE_FILE(filePath, astNodeContainer, this._eventbus, handleError);
 
       // Push any generated doc and AST data output.
       if (result)
@@ -117,24 +132,29 @@ export default class GenerateDocData
          astData.push({ filePath: relativeFilePath, ast: result.ast });
       }
 
-      return { docData, astData };
+      return { docData, astData, astNodeContainer };
    }
 
    /**
     * Generates doc data from a file path and supporting data.
     *
-    * @param {string}         filePath - Doc data is generated from this file path.
+    * @param {string}            filePath - Doc data is generated from this file path.
     *
-    * @param {DocObject[]}    [docData] - DocObject data is pushed to this array.
+    * @param {DocObject[]}       [docData] - DocObject data is pushed to this array.
     *
-    * @param {ASTData[]}      [astData] - AST data is pushed to this array.
+    * @param {ASTData[]}         [astData] - AST data is pushed to this array.
     *
-    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
-    *                                                 with the default being to throw any errors encountered.
+    * @param {ASTNodeContainer}  [astNodeContainer] - All doc object AST nodes are added to this object.
+    *
+    * @param {string}            [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    *                                                    with the default being to throw any errors encountered.
+    *
+    * @param {boolean}           [log=true] - If true a log statement is emitted.
     *
     * @returns {*}
     */
-   generateTestDocData(filePath, docData = [], astData = [], handleError = 'throw')
+   generateTestDocData({ filePath = void 0, docData = [], astData = [], astNodeContainer = new ASTNodeContainer(),
+    handleError = 'throw', log = true } = {})
    {
       const relativeFilePath = path.relative(this._config._dirPath, filePath);
 
@@ -156,9 +176,9 @@ export default class GenerateDocData
          if (relativeFilePath.match(reg)) { return void 0; }
       }
 
-      this._eventbus.trigger('log:info:raw', `parse: ${filePath}`);
+      if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      const result = s_TRAVERSE_TEST(this._config.test.type, filePath, this._eventbus, handleError);
+      const result = s_TRAVERSE_TEST(this._config.test.type, filePath, astNodeContainer, this._eventbus, handleError);
 
       if (result)
       {
@@ -167,7 +187,7 @@ export default class GenerateDocData
          astData.push({ filePath: relativeFilePath, ast: result.ast });
       }
 
-      return { docData, astData };
+      return { docData, astData, astNodeContainer };
    }
 }
 
@@ -176,12 +196,14 @@ export default class GenerateDocData
 /**
  * Traverse doc comments in given code.
  *
- * @param {object|string}  code - target JavaScript code.
+ * @param {object|string}     code - target JavaScript code.
  *
- * @param {EventProxy}     eventbus - The plugin event proxy.
+ * @param {ASTNodeContainer}  astNodeContainer - All doc object AST nodes are added to this object.
  *
- * @param {string}         handleError - Determines how to handle errors. Options are `log` and `throw` with the default
- *                                       being to throw any errors encountered.
+ * @param {EventProxy}        eventbus - The plugin event proxy.
+ *
+ * @param {string}            handleError - Determines how to handle errors. Options are `log` and `throw` with the
+ *                                          default being to throw any errors encountered.
  *
  * @returns {Object} - return document that is traversed.
  *
@@ -191,7 +213,7 @@ export default class GenerateDocData
  *
  * @private
  */
-const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
+const s_TRAVERSE_CODE = (code, astNodeContainer, eventbus, handleError) =>
 {
    let ast;
 
@@ -226,7 +248,8 @@ const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:code:create', ast, actualCode, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:code:create',
+    { ast, astNodeContainer, code: actualCode, filePath });
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {
@@ -257,12 +280,14 @@ const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
 /**
  * Traverse doc comments in given file.
  *
- * @param {string}      filePath - target JavaScript file path.
+ * @param {string}            filePath - target JavaScript file path.
  *
- * @param {EventProxy}  eventbus - The plugin event proxy.
+ * @param {ASTNodeContainer}  astNodeContainer - All doc object AST nodes are added to this object.
  *
- * @param {string}      handleError - Determines how to handle errors. Options are `log` and `throw` with the default
- *                                    being to throw any errors encountered.
+ * @param {EventProxy}        eventbus - The plugin event proxy.
+ *
+ * @param {string}            handleError - Determines how to handle errors. Options are `log` and `throw` with the
+ *                                          default being to throw any errors encountered.
  *
  * @returns {Object} - return document that is traversed.
  *
@@ -272,7 +297,7 @@ const s_TRAVERSE_CODE = (code, eventbus, handleError) =>
  *
  * @private
  */
-const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
+const s_TRAVERSE_FILE = (filePath, astNodeContainer, eventbus, handleError) =>
 {
    let ast;
 
@@ -293,7 +318,7 @@ const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:file:create', ast, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:file:create', { ast, astNodeContainer, filePath });
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {
@@ -324,14 +349,16 @@ const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
 /**
  * Traverse doc comments in test code files.
  *
- * @param {string}      type - test code type.
+ * @param {string}            type - test code type.
  *
- * @param {string}      filePath - target test code file path.
+ * @param {string}            filePath - target test code file path.
  *
- * @param {EventProxy}  eventbus - The plugin event proxy.
+ * @param {ASTNodeContainer}  astNodeContainer - All doc object AST nodes are added to this object.
  *
- * @param {string}      handleError - Determines how to handle errors. Options are `log` and `throw` with the default
- *                                    being to throw any errors encountered.
+ * @param {EventProxy}        eventbus - The plugin event proxy.
+ *
+ * @param {string}            handleError - Determines how to handle errors. Options are `log` and `throw` with the
+ *                                          default being to throw any errors encountered.
  *
  * @returns {Object} return document info that is traversed.
  *
@@ -341,7 +368,7 @@ const s_TRAVERSE_FILE = (filePath, eventbus, handleError) =>
  *
  * @private
  */
-const s_TRAVERSE_TEST = (type, filePath, eventbus, handleError) =>
+const s_TRAVERSE_TEST = (type, filePath, astNodeContainer, eventbus, handleError) =>
 {
    let ast;
 
@@ -362,7 +389,8 @@ const s_TRAVERSE_TEST = (type, filePath, eventbus, handleError) =>
       }
    }
 
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:test:create', type, ast, filePath);
+   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:test:create',
+    { type, ast, astNodeContainer, filePath });
 
    eventbus.trigger('typhonjs:ast:walker:traverse', ast,
    {

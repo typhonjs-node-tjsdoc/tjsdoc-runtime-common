@@ -59,16 +59,23 @@ export default class ASTNodeContainer
    }
 
    /**
+    * Sets an AST node by ID.
+    *
+    * @param {number}   id - An ID to retrieve a stored node.
+    * @param {ASTNode}  node - AST node to set.
+    */
+   set(id, node)
+   {
+      this._nodes[id] = node;
+   }
+
+   /**
     * Wires up ASTNodeContainer on the plugin eventbus.
     *
     * @param {PluginEvent} ev - The plugin event.
     */
    onPluginLoad(ev)
    {
-      const eventbus = ev.eventbus;
-
-      eventbus.on('tjsdoc:data:ast:nodes:add', this.add, this);
-      eventbus.on('tjsdoc:data:ast:nodes:clear', this.clear, this);
-      eventbus.on('tjsdoc:data:ast:nodes:get', this.get, this);
+      ev.eventbus.on('tjsdoc:data:ast:node:container:get', () => this);
    }
 }
