@@ -10,15 +10,16 @@ export class DocDB
    /**
     * Initializes the TaffyDB instance with given document data.
     *
-    * @param {DocObject[]} docData - TJSDoc document data.
+    * @param {DocObject[]} [docData] - TJSDoc document data.
     */
-   constructor(docData)
+   constructor(docData = void 0)
    {
       /**
        * TaffyDB instance of docData.
        * @type {Taffy}
        */
       this._docDB = taffy(docData);
+      this._docID = 0;
    }
 
    /**
@@ -162,6 +163,81 @@ export class DocDB
    }
 
    /**
+    * Returns the current doc ID.
+    *
+    * @returns {number}
+    */
+   getCurrentID()
+   {
+      return this._docID;
+   }
+
+   /**
+    * Returns the current doc ID then post-increments it.
+    *
+    * @returns {number}
+    */
+   getCurrentIDAndIncrement()
+   {
+      return this._docID++;
+   }
+
+   /**
+    * Inserts a DocObject, array of DocObjects, or DocDB.
+    *
+    * @param {DocObject|DocObject[]|DocDB}   docObjectOrDB - A single instance or array of DocObjects or DocDB to merge.
+    *
+    * @returns {Taffy}
+    */
+   insert(docObjectOrDB)
+   {
+      if (docObjectOrDB instanceof DocDB)
+      {
+         if (docObjectOrDB === this._docDB)
+         {
+            throw new ReferenceError(`'docObject' is the same instance as this DocDB.`);
+         }
+
+         return this._docDB.insert(docObjectOrDB.find());
+      }
+      else if (typeof docObjectOrDB === 'object')
+      {
+         return this._docDB.insert(docObjectOrDB);
+      }
+
+      throw new ReferenceError(`'docObject' is not an 'object' or 'array'.`);
+   }
+
+   /**
+    * Merges a DocObject, array of DocObjects, or DocDB.
+    *
+    * @param {DocObject|DocObject[]|DocDB}   docObjectOrDB - A single instance or array of DocObjects or DocDB to merge.
+    *
+    * @param {*}                             key - Identity column to be used to match records against the existing
+    *                                              db. The TaffyDB default is: `id`.
+    *
+    * @returns {Taffy}
+    */
+   merge(docObjectOrDB, key = void 0)
+   {
+      if (docObjectOrDB instanceof DocDB)
+      {
+         if (docObjectOrDB === this._docDB)
+         {
+            throw new ReferenceError(`'docObject' is the same instance as this DocDB.`);
+         }
+
+         return this._docDB.merge(docObjectOrDB.find(), key);
+      }
+      else if (typeof docObjectOrDB === 'object')
+      {
+         return this._docDB.merge(docObjectOrDB, key);
+      }
+
+      throw new ReferenceError(`'docObject' is not an 'object' or 'array'.`);
+   }
+
+   /**
     * Wires up DocDB to plugin eventbus.
     *
     * @param {PluginEvent} ev - The plugin event.
@@ -170,12 +246,18 @@ export class DocDB
     */
    onPluginLoad(ev)
    {
+      ev.eventbus.on('tjsdoc:data:docdb:current:id:get', this.getCurrentID, this);
+      ev.eventbus.on('tjsdoc:data:docdb:current:id:increment:get', this.getCurrentIDAndIncrement, this);
       ev.eventbus.on('tjsdoc:data:docdb:find', this.find, this);
       ev.eventbus.on('tjsdoc:data:docdb:find:access:docs', this.findAccessDocs, this);
       ev.eventbus.on('tjsdoc:data:docdb:find:all:identifiers:kind:grouping', this.findAllIdentifiersKindGrouping, this);
       ev.eventbus.on('tjsdoc:data:docdb:find:by:name', this.findByName, this);
       ev.eventbus.on('tjsdoc:data:docdb:find:sorted', this.findSorted, this);
+      ev.eventbus.on('tjsdoc:data:docdb:get', () => this, this);
+      ev.eventbus.on('tjsdoc:data:docdb:insert', this.insert, this);
+      ev.eventbus.on('tjsdoc:data:docdb:merge', this.merge, this);
       ev.eventbus.on('tjsdoc:data:docdb:query', this.query, this);
+      ev.eventbus.on('tjsdoc:data:docdb:reset', this.reset, this);
    }
 
    /**
@@ -190,6 +272,15 @@ export class DocDB
    {
       return this._docDB(query);
    }
+
+   /**
+    * Resets the DocDB.
+    */
+   reset()
+   {
+      this._docDB().remove();
+      this._docID = 0;
+   }
 }
 
 /**
@@ -199,8 +290,19 @@ export class DocDB
  */
 export function onPluginLoad(ev)
 {
-   ev.eventbus.on('tjsdoc:data:docdb:create', (docData) =>
+   const eventbus = ev.eventbus;
+
+   eventbus.on('tjsdoc:system:docdb:create', (docData) => new DocDB(docData));
+
+   // Create an event binding to filter out source code in provided `docDB` based on `config.includeSource`.
+   eventbus.on('tjsdoc:system:docdb:filter:include:source', (docDB) =>
    {
-      return new DocDB(docData);
+      const config = eventbus.triggerSync('tjsdoc:data:config:get');
+
+      // Optionally remove source code from all file / testFile document data.
+      if (!config.includeSource)
+      {
+         docDB.query({ kind: ['file', 'testFile'] }).each((doc) => doc.content = '');
+      }
    });
 }

@@ -12,29 +12,26 @@ export default class LintDocLogger
    {
       const results = [];
       const docs = this._eventbus.triggerSync('tjsdoc:data:docdb:find', { kind: ['method', 'function'] });
-      const astNodeContainer = this._eventbus.triggerSync('tjsdoc:data:ast:node:container:get');
 
       for (const doc of docs)
       {
-         if (doc.undocument) { continue; }
-
-         const node = astNodeContainer.get(doc.__docId__);
+         if (doc.undocument || !doc.node) { continue; }
 
          // Get AST / parser specific parsing of the node returning any method params.
-         const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', node);
+         const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', doc.node);
 
          const docParams = this._getParamsFromDoc(doc);
 
          if (this._match(codeParams, docParams)) { continue; }
 
-         results.push({ node, doc, codeParams, docParams });
+         results.push({ doc, codeParams, docParams });
       }
 
       this._showResult(results);
    }
 
    /**
-    * Gets variable names of from method arguments.
+    * Gets variable names from method arguments.
     *
     * @param {DocObject} doc - target doc object.
     *
@@ -113,13 +110,12 @@ export default class LintDocLogger
       for (const result of results)
       {
          const doc = result.doc;
-         const node = result.node;
          const filePath = doc.longname.split('~')[0];
          const name = doc.longname.split('~')[1];
          const absFilePath = path.resolve(config._dirPath, filePath);
 
          const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
-          absFilePath, node);
+          absFilePath, doc.node);
 
          this._eventbus.trigger('log:warn:raw',
           `\n[33mwarning: signature mismatch: ${name} ${filePath}#${comment.startLine}[32m`);

@@ -98,14 +98,6 @@ export default class InvalidCodeLogger
    }
 
    /**
-    * Clears any logged invalid code.
-    */
-   clearLog()
-   {
-      this._invalidCode = [];
-   }
-
-   /**
     * Logs all invalid code previously added. Entries without `error.fatalError` defined are output first as warnings
     * and any entries with `error.fatalError` defined are output last as errors in addition to logging the fatal error.
     */
@@ -160,9 +152,17 @@ export default class InvalidCodeLogger
 
       this._eventbus.on('tjsdoc:system:invalid:code:add', this.addInvalidCode, this);
 
-      this._eventbus.on('tjsdoc:system:invalid:code:clear', this.clearLog, this);
+      this._eventbus.on('tjsdoc:system:invalid:code:reset', this.resetLog, this);
 
       this._eventbus.on('tjsdoc:system:invalid:code:log', this.logInvalidCode, this);
+   }
+
+   /**
+    * Clears any logged invalid code.
+    */
+   resetLog()
+   {
+      this._invalidCode = [];
    }
 
    /**

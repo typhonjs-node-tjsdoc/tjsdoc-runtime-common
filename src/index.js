@@ -4,11 +4,11 @@ import * as DocDB          from './doc/DocDB.js';
 
 import * as ParserError    from './parser/ParserError.js';
 
-import ASTNodeContainer    from './utils/ASTNodeContainer.js';
 import FileUtil            from './utils/FileUtil.js';
 import GenerateDocData     from './utils/GenerateDocData.js';
 import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
 import LintDocLogger       from './utils/LintDocLogger.js';
+import MergeDocData        from './utils/MergeDocData.js';
 import NamingUtil          from './utils/NamingUtil.js';
 import PathResolver        from './utils/PathResolver.js';
 
@@ -53,8 +53,8 @@ export function onPluginLoad(ev)
       { name: 'tjsdoc-generate-docdata', instance: new GenerateDocData() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
       { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
+      { name: 'tjsdoc-merge-docdata', instance: new MergeDocData() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
-      { name: 'tjsdoc-node-container', instance: new ASTNodeContainer() },
       { name: 'tjsdoc-parser-error', instance: ParserError },
       { name: 'tjsdoc-path-resolver', instance: new PathResolver() }
    ]);
@@ -69,9 +69,7 @@ export function onRegenerate(ev)
 {
    const eventbus = ev.eventbus;
 
-   eventbus.triggerSync('tjsdoc:data:ast:node:container:get').clear();
-
-   eventbus.trigger('tjsdoc:system:invalid:code:clear');
+   eventbus.trigger('tjsdoc:system:invalid:code:reset');
 
    eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
 }
