@@ -49,15 +49,29 @@ export function onPluginLoad(ev)
 
       // Local plugins.
       { name: 'tjsdoc-docdb', instance: DocDB },
+      { name: 'tjsdoc-docdb-generate', instance: new GenerateDocData() },
+      { name: 'tjsdoc-docdb-merge', instance: new MergeDocData() },
       { name: 'tjsdoc-file-util', instance: new FileUtil() },
-      { name: 'tjsdoc-generate-docdata', instance: new GenerateDocData() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
-      { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
-      { name: 'tjsdoc-merge-docdata', instance: new MergeDocData() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
       { name: 'tjsdoc-parser-error', instance: ParserError },
       { name: 'tjsdoc-path-resolver', instance: new PathResolver() }
    ]);
+}
+
+
+/**
+ * Handle any removal of plugins before generation that are not needed based on the target project TJSDocConfig.
+ *
+ * @param {PluginEvent} ev - The plugin event.
+ */
+export function onPreGenerate(ev)
+{
+   // If enabled add lint doc logger.
+   if (ev.data.config.docLint)
+   {
+      ev.eventbus.trigger('plugins:add', { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() });
+   }
 }
 
 /**

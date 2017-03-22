@@ -6,28 +6,16 @@ import path from 'path';
 export default class LintDocLogger
 {
    /**
-    * Executes writing source code for each file
+    * Instantiates LintDocLogger
     */
-   exec()
+   constructor()
    {
-      const results = [];
-      const docs = this._eventbus.triggerSync('tjsdoc:data:docdb:find', { kind: ['method', 'function'] });
-
-      for (const doc of docs)
-      {
-         if (doc.undocument || !doc.node) { continue; }
-
-         // Get AST / parser specific parsing of the node returning any method params.
-         const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', doc.node);
-
-         const docParams = this._getParamsFromDoc(doc);
-
-         if (this._match(codeParams, docParams)) { continue; }
-
-         results.push({ doc, codeParams, docParams });
-      }
-
-      this._showResult(results);
+      /**
+       * Holds any lint doc warning messages.
+       * @type {Array}
+       * @private
+       */
+      this._results = [];
    }
 
    /**
@@ -43,6 +31,26 @@ export default class LintDocLogger
       const params = doc.params || [];
 
       return params.map((v) => v.name).filter((v) => !v.includes('.')).filter((v) => !v.includes('['));
+   }
+
+   /**
+    * Logs any lint doc warnings uncovered and clears warnings after logging.
+    */
+   logWarnings()
+   {
+      if (this._results.length > 0)
+      {
+         this._eventbus.trigger('log:warn:raw', '\n[33m==================================[0m');
+         this._eventbus.trigger('log:warn:raw', `[33mLintDocLogger warnings:[0m`);
+         this._eventbus.trigger('log:warn:raw', '[33m==================================[0m');
+
+         for (const message of this._results)
+         {
+            this._eventbus.trigger('log:warn:raw', message);
+         }
+
+         this._results.length = 0;
+      }
    }
 
    /**
@@ -74,6 +82,37 @@ export default class LintDocLogger
    }
 
    /**
+    * Handles parsing any created DocObject before it is inserted into the DB. This always allows parsing `doc.node`
+    * which may be removed prior to insertion into the DocDB if `outputASTData` is not true (the default).
+    *
+    * @param {PluginEvent} ev - The plugin event.
+    */
+   onHandleDocObject(ev)
+   {
+      const doc = ev.data.doc;
+
+      // Only handle method and function docs.
+      if (doc.undocument || !doc.node || (doc.kind !== 'method' && doc.kind !== 'function')) { return; }
+
+      // Get AST / parser specific parsing of the node returning any method params.
+      const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', doc.node);
+
+      const docParams = this._getParamsFromDoc(doc);
+
+      if (this._match(codeParams, docParams)) { return; }
+
+      const absFilePath = path.resolve(this._config._dirPath, doc.filePath);
+
+      const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
+       absFilePath, doc.node);
+
+      const lintMessage = `\n[33mwarning: signature mismatch: ${doc.name} ${doc.filePath}#${comment.startLine}[32m\n${
+       comment.text}[0m'`;
+
+      this._results.push(lintMessage);
+   }
+
+   /**
     * Wires up LintDocLogger on the plugin eventbus.
     *
     * @param {PluginEvent} ev - The plugin event.
@@ -86,41 +125,21 @@ export default class LintDocLogger
        */
       this._eventbus = ev.eventbus;
 
-      this._eventbus.on('tjsdoc:system:lint:docdb:log', this.exec, this);
+      this._eventbus.on('tjsdoc:system:lint:doc:log', this.logWarnings, this);
    }
 
    /**
-    * Show invalid lint code.
+    * Stores TJSDocConfig
     *
-    * @param {Array<{doc: DocObject, node: ASTNode, codeParams: string[], docParams: string[]}>} results - target
-    *
-    * @private
+    * @param {PluginEvent} ev - The plugin event.
     */
-   _showResult(results)
+   onStart(ev)
    {
-      // Early out if there are no results to show.
-      if (results.length <= 0) { return; }
-
-      const config = this._eventbus.triggerSync('tjsdoc:data:config:get');
-
-      this._eventbus.trigger('log:warn:raw', '\n[33m==================================[0m');
-      this._eventbus.trigger('log:warn:raw', `[33mLintDocLogger warnings:[0m`);
-      this._eventbus.trigger('log:warn:raw', '[33m==================================[0m');
-
-      for (const result of results)
-      {
-         const doc = result.doc;
-         const filePath = doc.longname.split('~')[0];
-         const name = doc.longname.split('~')[1];
-         const absFilePath = path.resolve(config._dirPath, filePath);
-
-         const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
-          absFilePath, doc.node);
-
-         this._eventbus.trigger('log:warn:raw',
-          `\n[33mwarning: signature mismatch: ${name} ${filePath}#${comment.startLine}[32m`);
-
-         this._eventbus.trigger('log:warn:raw', `[32m${comment.text}[0m'`);
-      }
+      /**
+       * The target project TJSDoc config.
+       * @type {TJSDocConfig}
+       * @private
+       */
+      this._config = ev.data.config;
    }
 }
