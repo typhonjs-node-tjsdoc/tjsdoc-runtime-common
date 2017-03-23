@@ -306,19 +306,25 @@ export class DocDB
 
       this._config = this._eventbus.triggerSync('tjsdoc:data:config:get');
 
-      this._eventbus.on('tjsdoc:data:docdb:current:id:get', this.getCurrentID, this);
-      this._eventbus.on('tjsdoc:data:docdb:current:id:increment:get', this.getCurrentIDAndIncrement, this);
-      this._eventbus.on('tjsdoc:data:docdb:find', this.find, this);
-      this._eventbus.on('tjsdoc:data:docdb:find:access:docs', this.findAccessDocs, this);
-      this._eventbus.on('tjsdoc:data:docdb:find:all:identifiers:kind:grouping', this.findAllIdentifiersKindGrouping, this);
-      this._eventbus.on('tjsdoc:data:docdb:find:by:name', this.findByName, this);
-      this._eventbus.on('tjsdoc:data:docdb:find:sorted', this.findSorted, this);
-      this._eventbus.on('tjsdoc:data:docdb:get', () => this, this);
-      this._eventbus.on('tjsdoc:data:docdb:insert:doc:object', this.insertDocObject, this);
-      this._eventbus.on('tjsdoc:data:docdb:insert:', this.insert, this);
-      this._eventbus.on('tjsdoc:data:docdb:merge', this.merge, this);
-      this._eventbus.on('tjsdoc:data:docdb:query', this.query, this);
-      this._eventbus.on('tjsdoc:data:docdb:reset', this.reset, this);
+      let eventPrepend = 'tjsdoc';
+
+      // If `eventPrepend` is defined then it is prepended before all event bindings.
+      if (typeof ev.pluginOptions.eventPrepend === 'string') { eventPrepend = `${ev.pluginOptions.eventPrepend}`; }
+
+      this._eventbus.on(`${eventPrepend}:data:docdb:current:id:get`, this.getCurrentID, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:current:id:increment:get`, this.getCurrentIDAndIncrement, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find`, this.find, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:access:docs`, this.findAccessDocs, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:all:identifiers:kind:grouping`,
+       this.findAllIdentifiersKindGrouping, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:by:name`, this.findByName, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:sorted`, this.findSorted, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:get`, () => this, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:insert:doc:object`, this.insertDocObject, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:insert`, this.insert, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:merge`, this.merge, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:query`, this.query, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:reset`, this.reset, this);
    }
 
    /**
