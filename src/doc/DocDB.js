@@ -24,15 +24,52 @@ export class DocDB
    }
 
    /**
+    * Filters out any unnecessary DocObject data based on the target project TJSDocConfig.
+    *
+    * @param {DocObject}   doc - The DocObject to filter.
+    *
+    * @returns {DocObject}
+    */
+   filterDoc(doc)
+   {
+      if (this._config)
+      {
+         switch (doc.kind)
+         {
+            case 'file':
+               // Filter out any AST data as it is not further processed.
+               if (!this._config.outputASTData) { delete doc.node; }
+
+               // Filter out any file content.
+               if (!this._config.includeSource) { doc.content = ''; }
+               break;
+
+            case 'testFile':
+               // Filter out any file content.
+               if (!this._config.includeSource) { doc.content = ''; }
+               break;
+
+            // Catch all for any unmatched doc kind above.
+            default:
+               // Filter out any AST data as it is not further processed.
+               if (!this._config.outputASTData) { delete doc.node; }
+               break;
+         }
+      }
+
+      return doc;
+   }
+
+   /**
     * Find doc object with given filter options.
     *
-    * @param {...Object} cond - find condition.
+    * @param {...Object} query - find query.
     *
     * @returns {DocObject[]} found doc objects.
     */
-   find(...cond)
+   find(...query)
    {
-      return this.findSorted(null, ...cond);
+      return this.findSorted(null, ...query);
    }
 
    /**
@@ -152,13 +189,13 @@ export class DocDB
     * Find doc objects sorted by name and any optional sorting criteria passed in as the first parameter.
     *
     * @param {string}      [order] - doc objects order(``column asec`` or ``column desc``).
-    * @param {...Object}   [cond] - condition objects - A TaffyDB filter query.
+    * @param {...Object}   [query] - condition objects - A TaffyDB filter query.
     *
     * @returns {DocObject[]} found doc objects.
     */
-   findSorted(order = void 0, ...cond)
+   findSorted(order = void 0, ...query)
    {
-      const data = this._docDB(...cond);
+      const data = this._docDB(...query);
 
       return data.order(order ? `${order}, name asec` : 'name asec').map((v) => v);
    }
@@ -199,11 +236,11 @@ export class DocDB
             throw new ReferenceError(`'objectOrDB' is the same instance as this DocDB.`);
          }
 
-         return this._docDB.insert(objectOrDB.find());
+         return this._docDB.insert(objectOrDB.find().map((doc) => this.filterDoc(doc)));
       }
       else if (typeof objectOrDB === 'object')
       {
-         return this._docDB.insert(objectOrDB);
+         return this._docDB.insert(this.filterDoc(objectOrDB));
       }
 
       throw new ReferenceError(`'objectOrDB' is not an 'object' or 'array'.`);
@@ -232,36 +269,10 @@ export class DocDB
       }
 
       // Destroys the docObject.
-      if (destroy) { docObject.destroy(); }
-
-      // Filter out any unnecessary based on the target project TJSDocConfig.
-      if (this._config)
-      {
-         switch (doc.kind)
-         {
-            case 'file':
-               // Filter out any AST data as it is not further processed.
-               if (!this._config.outputASTData) { delete doc.node; }
-
-               // Filter out any file content.
-               if (!this._config.includeSource) { doc.content = ''; }
-               break;
-
-            case 'testFile':
-               // Filter out any file content.
-               if (!this._config.includeSource) { doc.content = ''; }
-               break;
-
-            // Catch all for any unmatched doc kind above.
-            default:
-               // Filter out any AST data as it is not further processed.
-               if (!this._config.outputASTData) { delete doc.node; }
-               break;
-         }
-      }
+      if (destroy && typeof docObject.destroy === 'function') { docObject.destroy(); }
 
       // Inserts the doc object into the TaffyDB instance.
-      return this._docDB.insert(doc);
+      return this._docDB.insert(this.filterDoc(doc));
    }
 
    /**
@@ -284,7 +295,7 @@ export class DocDB
             throw new ReferenceError(`'objectOrDB' is the same instance as this DocDB.`);
          }
 
-         return this._docDB.merge(objectOrDB.find(), key);
+         return this._docDB.merge(objectOrDB.find().map((doc) => this.filterDoc(doc)), key);
       }
       else if (typeof objectOrDB === 'object')
       {
@@ -326,7 +337,6 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:merge`, this.merge, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:query`, this.query, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:remove`, this.remove, this);
-      this._eventbus.on(`${eventPrepend}:data:docdb:remove:db`, this.removeDB, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:reset`, this.reset, this);
    }
 
@@ -345,31 +355,32 @@ export class DocDB
    }
 
    /**
-    * Removes docs that match the query.
+    * Removes docs that match the query or if a DocDB is provided then all docs are removed by `filePath` in this
+    * instance that are found in the given DocDB.
     *
-    * @param {Array|function|object|string|undefined} [query] - An optional TaffyDB query; one or more Strings, records,
-    *                                                           filter objects, arrays, or functions.
+    * @param {Array|DocDB|function|object|string|undefined} [query] - A DocDB instance to query for doc file paths to
+    *                                                                 remove or an optional TaffyDB query.
     * @returns {number} - count of docs removed.
     */
    remove(...query)
    {
-      return this._docDB(...query).remove();
-   }
+      if (query.length.length > 0 && query[0] instanceof DocDB)
+      {
+         const removeDocDB = query[0];
 
-   /**
-    * Removes all docs by `filePath` in this instance that are found in the given DocDB.
-    *
-    * @param {DocDB} docDB - The source DB to query for doc file paths to remove.
-    *
-    * @returns {number} - count of docs removed.
-    */
-   removeDB(docDB)
-   {
-      if (!(docDB instanceof DocDB)) { throw new TypeError(`'docDB' is not a 'DocDB'.`); }
+         if (removeDocDB === this._docDB)
+         {
+            throw new ReferenceError(`'removeDocDB' is the same instance as this DocDB.`);
+         }
 
-      const distinctPaths = docDB.query().distinct('filePath');
+         const distinctPaths = removeDocDB.query().distinct('filePath');
 
-      return distinctPaths.length > 0 ? this._docDB({ filePath: distinctPaths }).remove() : 0;
+         return distinctPaths.length > 0 ? this._docDB({ filePath: distinctPaths }).remove() : 0;
+      }
+      else
+      {
+         return this._docDB(...query).remove();
+      }
    }
 
    /**
