@@ -219,6 +219,7 @@ export class DocDB
     *
     * @param {boolean}     destroy - Destroys the DocObject removing all internal data references so that it can go
     *                                out of scope.
+    * @returns {Taffy}
     * @private
     */
    insertDocObject(docObject, destroy = true)
@@ -260,7 +261,7 @@ export class DocDB
       }
 
       // Inserts the doc object into the TaffyDB instance.
-      this._docDB.insert(doc);
+      return this._docDB.insert(doc);
    }
 
    /**
