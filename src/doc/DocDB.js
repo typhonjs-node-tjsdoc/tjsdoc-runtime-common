@@ -325,20 +325,51 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:insert`, this.insert, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:merge`, this.merge, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:query`, this.query, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:remove`, this.remove, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:remove:db`, this.removeDB, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:reset`, this.reset, this);
    }
 
    /**
     * Performs a TaffyDB query.
     *
-    * @param {object|undefined}  [query] - An optional TaffyDB query.
+    * @param {Array|function|object|string}  [query] - An optional TaffyDB query; one or more Strings, records, filter
+    *                                                  objects, arrays, or functions.
     *
     * @see http://www.taffydb.com/
     * @returns {Taffy}
     */
-   query(query = void 0)
+   query(...query)
    {
-      return this._docDB(query);
+      return this._docDB(...query);
+   }
+
+   /**
+    * Removes docs that match the query.
+    *
+    * @param {Array|function|object|string|undefined} [query] - An optional TaffyDB query; one or more Strings, records,
+    *                                                           filter objects, arrays, or functions.
+    * @returns {number} - count of docs removed.
+    */
+   remove(...query)
+   {
+      return this._docDB(...query).remove();
+   }
+
+   /**
+    * Removes all docs by `filePath` in this instance that are found in the given DocDB.
+    *
+    * @param {DocDB} docDB - The source DB to query for doc file paths to remove.
+    *
+    * @returns {number} - count of docs removed.
+    */
+   removeDB(docDB)
+   {
+      if (!(docDB instanceof DocDB)) { throw new TypeError(`'docDB' is not a 'DocDB'.`); }
+
+      const distinctPaths = docDB.query().distinct('filePath');
+
+      return distinctPaths.length > 0 ? this._docDB({ filePath: distinctPaths }).remove() : 0;
    }
 
    /**
