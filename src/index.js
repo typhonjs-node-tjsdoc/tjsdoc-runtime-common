@@ -59,9 +59,8 @@ export function onPluginLoad(ev)
    ]);
 }
 
-
 /**
- * Handle any removal of plugins before generation that are not needed based on the target project TJSDocConfig.
+ * Handles adding plugins before generation that may be needed based on the target project TJSDocConfig.
  *
  * @param {PluginEvent} ev - The plugin event.
  */
@@ -82,8 +81,6 @@ export function onPreGenerate(ev)
 export function onRegenerate(ev)
 {
    const eventbus = ev.eventbus;
-
-   eventbus.trigger('tjsdoc:system:invalid:code:reset');
 
    eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
 }

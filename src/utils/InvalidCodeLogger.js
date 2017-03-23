@@ -17,7 +17,7 @@ export default class InvalidCodeLogger
    }
 
    /**
-    * Helper event binding to add invalid code data. While most provided data is optional the following entries are
+    * Add invalid code data. While most provided data is optional the following entries are
     * mandatory: either `filePath` or `code` in addition to `node`, `parseError`, or `fatalError` must be defined.
     *
     * @param {object}      data - The data object containing info or the invalid code.
@@ -82,26 +82,195 @@ export default class InvalidCodeLogger
          delete data.parserError;
       }
 
-      if (typeof data.node === 'object')
-      {
-         // Make a copy of the node
-         data.node = JSON.parse(JSON.stringify(data.node));
-
-         // Sanitize node removing all children except comments, type, and range data.
-         this._eventbus.trigger('tjsdoc:system:ast:node:sanitize:children', data.node);
-      }
-
       // Determine type of invalid code.
       const type = data.code ? 'code' : 'file';
 
-      this._invalidCode.push(Object.assign({ type }, data));
+      // Immediately build the formatted log output entry and store. This allows any given data including AST nodes to
+      // not be retained.
+      this._invalidCode.push(this._buildEntryDispatch(Object.assign({}, data, { _output: '', type })));
+   }
+
+   /**
+    * Builds the output message for warnings and errors then returns the minimal entry object hash containing the
+    * constructed log message output.
+    *
+    * @param {object}   entry - Invalid code entry.
+    *
+    * @returns{object}
+    * @private
+    */
+   _buildEntryDispatch(entry)
+   {
+      // Separate errors generated from internal failures of TJSDoc.
+      if (typeof entry.fatalError === 'undefined')
+      {
+         // warning title (yellow), body (light yellow)
+         this._buildEntry(entry, 'warning:', '[33m', '[32m');
+      }
+      else
+      {
+         // error title (red), body (light red)
+         this._buildEntry(entry, 'error:', '[31m', '[1;31m');
+      }
+
+      return { fatalError: entry.fatalError, output: entry._output };
+   }
+
+   /**
+    * Controls the output message building for an invalid code entry.
+    *
+    * @param {object}   entry - An invalid code entry to log.
+    *
+    * @param {string}   label - A label to lead the log entry.
+    *
+    * @param {string}   headerColor - ANSI color to apply for header entry / message.
+    *
+    * @param {string}   bodyColor - ANSI color to apply to body of entry.
+    */
+   _buildEntry(entry, label, headerColor, bodyColor)
+   {
+      entry._output += `\n${headerColor}${label} could not process the following code.[0m\n`;
+
+      if (typeof entry.message !== 'undefined') { entry._output += `${headerColor}${entry.message}[0m\n`; }
+      if (typeof entry.filePath !== 'undefined') { entry._output += `${headerColor}${entry.filePath}[0m\n`; }
+
+      switch (entry.type)
+      {
+         case 'code':
+            if (entry.node)
+            {
+               this._buildCodeNode(entry, bodyColor);
+            }
+            else if (entry.parserError)
+            {
+               this._buildCodeParserError(entry, headerColor, bodyColor);
+            }
+            break;
+
+         case 'file':
+            if (entry.parserError)
+            {
+               this._buildFileParserError(entry, headerColor, bodyColor);
+            }
+            else if (entry.node)
+            {
+               this._buildFileNode(entry, bodyColor);
+            }
+            break;
+      }
+   }
+
+   /**
+    * Builds invalid code entry from in memory code from a parser error.
+    *
+    * @param      {object}   entry - A data entry with `code`, `parseError`.
+    *
+    * @property   {object}   code - Code to parse / log.
+    *
+    * @property   {object}   parserError - Parser error object.
+    *
+    * @param      {string}   headerColor - ANSI color to apply for header entry / message.
+    *
+    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
+    */
+   _buildCodeParserError(entry, headerColor, bodyColor)
+   {
+      if (typeof entry.parserError.message !== 'undefined')
+      {
+         entry._output += `${headerColor}${entry.parserError.message}[0m\n`;
+      }
+
+      const lines = entry.code.split('\n');
+      const start = Math.max(entry.parserError.line - 5, 0);
+      const end = Math.min(entry.parserError.line + 3, lines.length);
+      const targetLines = [];
+
+      for (let cntr = start; cntr < end; cntr++) { targetLines.push(`${cntr + 1}| ${lines[cntr]}`); }
+
+      entry._output += `${bodyColor}${targetLines.join('\n')}[0m`;
+   }
+
+   /**
+    * Builds invalid code entry from in memory code from an AST node.
+    *
+    * @param      {object}   entry - A data entry with `code`, `parseError`.
+    *
+    * @property   {object}   code - Code to parse / log.
+    *
+    * @property   {ASTNode}  node - An AST node to use to find comments and first line of node.
+    *
+    * @property   {string}   [message] - Additional message to prepend.
+    *
+    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
+    */
+   _buildCodeNode(entry, bodyColor)
+   {
+      const result = this._eventbus.triggerSync('tjsdoc:system:ast:code:comment:first:line:from:node:get',
+       entry.code, entry.node, true);
+
+      entry._output += `${bodyColor}${result.text}[0m`;
+   }
+
+   /**
+    * Builds invalid code entry from a file and a parser error.
+    *
+    * @param      {object}   entry - A data entry with `code`, `parseError`.
+    *
+    * @property   {object}   code - Code to parse / log.
+    *
+    * @property   {object}   parserError - Parser error object.
+    *
+    * @property   {string}   [message] - Additional message to prepend.
+    *
+    * @param      {string}   headerColor - ANSI color to apply for header entry / message.
+    *
+    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
+    */
+   _buildFileParserError(entry, headerColor, bodyColor)
+   {
+      if (typeof entry.parserError.message !== 'undefined')
+      {
+         entry._output += `${headerColor}${entry.parserError.message}[0m\n`;
+      }
+
+      const start = entry.parserError.line - 5;
+      const end = entry.parserError.line + 3;
+
+      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:lines:read', entry.filePath, start, end);
+
+      entry._output += `${bodyColor}${targetLines.join('\n')}[0m`;
+   }
+
+   /**
+    * Builds invalid code entry from a file and an AST node.
+    *
+    * @param      {object}   entry - A data entry with `code`, `parseError`.
+    *
+    * @property   {object}   code - Code to parse / log.
+    *
+    * @property   {ASTNode}  node - An AST node to use to find comments and first line of node.
+    *
+    * @property   {string}   [message] - Additional message to prepend.
+    *
+    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
+    */
+   _buildFileNode(entry, bodyColor)
+   {
+      const result = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
+       entry.filePath, entry.node, true);
+
+      entry._output += `${bodyColor}${result.text}[0m`;
    }
 
    /**
     * Logs all invalid code previously added. Entries without `error.fatalError` defined are output first as warnings
     * and any entries with `error.fatalError` defined are output last as errors in addition to logging the fatal error.
+    *
+    * The log is automatically reset unless reset is `false`.
+    *
+    * @param {boolean}  [reset=true] - If true the stored invalid code log entries are deleted after logging.
     */
-   logInvalidCode()
+   logInvalidCode(reset = true)
    {
       // Separate errors generated from internal failures of TJSDoc.
       const nonFatalEntries = this._invalidCode.filter((entry) => { return typeof entry.fatalError === 'undefined'; });
@@ -113,8 +282,7 @@ export default class InvalidCodeLogger
          this._eventbus.trigger('log:warn:raw', `[32mInvalidCodeLogger warnings[0m`);
          this._eventbus.trigger('log:warn:raw', '[33m==================================[0m');
 
-         // warning title (yellow), body (light yellow)
-         this._showEntries(nonFatalEntries, 'warning:', 'log:warn:raw', '[33m', '[32m');
+         for (const entry of nonFatalEntries) { this._eventbus.trigger('log:warn:raw', entry.output); }
       }
 
       if (fatalEntries.length > 0)
@@ -126,9 +294,14 @@ export default class InvalidCodeLogger
          this._eventbus.trigger('log:error:raw', `[1;31mhttps://github.com/typhonjs-doc/tjsdoc/issues[0m`);
          this._eventbus.trigger('log:error:raw', '[31m==================================[0m');
 
-         // error title (red), body (light red)
-         this._showEntries(fatalEntries, 'error:', 'log:error:raw', '[31m', '[1;31m');
+         for (const entry of fatalEntries)
+         {
+            this._eventbus.trigger('log:error:raw', entry.output);
+            this._eventbus.trigger('log:error', entry.fatalError);
+         }
       }
+
+      if (reset) { this._invalidCode.length = 0; }
    }
 
    /**
@@ -138,7 +311,7 @@ export default class InvalidCodeLogger
     *
     * `tjsdoc:system:invalid:code:clear`: Clears any currently logged invalid code.
     *
-    * `tjsdoc:system:invalid:code:log`: Invokes `log:error:raw` or `log:warn:raw` with the formatted data.
+    * `tjsdoc:system:invalid:code:log`: Logs any accumulated invalid code.
     *
     * @param {PluginEvent} ev - The plugin event.
     */
@@ -162,176 +335,7 @@ export default class InvalidCodeLogger
     */
    resetLog()
    {
-      this._invalidCode = [];
-   }
-
-   /**
-    * Logs an array of invalid code entries.
-    *
-    * @param {Array}    entries - An array of invalid code entries to log.
-    *
-    * @param {string}   label - A label to lead the log entry.
-    *
-    * @param {string}   event - Log event to invoke.
-    *
-    * @param {string}   headerColor - ANSI color to apply for header entry / message.
-    *
-    * @param {string}   bodyColor - ANSI color to apply to body of entry.
-    */
-   _showEntries(entries, label, event, headerColor, bodyColor)
-   {
-      for (const entry of entries)
-      {
-         this._eventbus.trigger(event, `\n${headerColor}${label} could not process the following code.[0m`);
-
-         if (typeof entry.message !== 'undefined')
-         {
-            this._eventbus.trigger(event, `${headerColor}${entry.message}[0m`);
-         }
-
-         if (typeof entry.filePath !== 'undefined')
-         {
-            this._eventbus.trigger(event, `${headerColor}${entry.filePath}[0m`);
-         }
-
-         switch (entry.type)
-         {
-            case 'code':
-               if (entry.node)
-               {
-                  this._showCodeNode(entry, event, bodyColor);
-               }
-               else if (entry.parserError)
-               {
-                  this._showCodeParserError(entry, event, headerColor, bodyColor);
-               }
-               break;
-
-            case 'file':
-               if (entry.parserError)
-               {
-                  this._showFileParserError(entry, event, headerColor, bodyColor);
-               }
-               else if (entry.node)
-               {
-                  this._showFileNode(entry, event, bodyColor);
-               }
-               break;
-         }
-
-         // Output any fatal error after logging the invalid code.
-         if (entry.fatalError) { this._eventbus.trigger('log:error', entry.fatalError); }
-      }
-   }
-
-   /**
-    * Show invalid code entry from in memory code from a parser error.
-    *
-    * @param      {object}   entry - A data entry with `code`, `parseError`.
-    *
-    * @property   {object}   code - Code to parse / log.
-    *
-    * @property   {object}   parserError - Parser error object.
-    *
-    * @param      {string}   event - The log event to invoke.
-    *
-    * @param      {string}   headerColor - ANSI color to apply for header entry / message.
-    *
-    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
-    */
-   _showCodeParserError(entry, event, headerColor, bodyColor)
-   {
-      if (typeof entry.parserError.message !== 'undefined')
-      {
-         this._eventbus.trigger(event, `${headerColor}${entry.parserError.message}[0m`);
-      }
-
-      const lines = entry.code.split('\n');
-      const start = Math.max(entry.parserError.line - 5, 0);
-      const end = Math.min(entry.parserError.line + 3, lines.length);
-      const targetLines = [];
-
-      for (let cntr = start; cntr < end; cntr++) { targetLines.push(`${cntr + 1}| ${lines[cntr]}`); }
-
-      this._eventbus.trigger(event, `${bodyColor}${targetLines.join('\n')}[0m`);
-   }
-
-   /**
-    * Show invalid code entry from in memory code from an AST node.
-    *
-    * @param      {object}   entry - A data entry with `code`, `parseError`.
-    *
-    * @property   {object}   code - Code to parse / log.
-    *
-    * @property   {ASTNode}  node - An AST node to use to find comments and first line of node.
-    *
-    * @property   {string}   [message] - Additional message to prepend.
-    *
-    * @param      {string}   event - The log event to invoke.
-    *
-    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
-    */
-   _showCodeNode(entry, event, bodyColor)
-   {
-      const result = this._eventbus.triggerSync('tjsdoc:system:ast:code:comment:first:line:from:node:get',
-       entry.code, entry.node, true);
-
-      this._eventbus.trigger(event, `${bodyColor}${result.text}[0m`);
-   }
-
-   /**
-    * Show invalid code entry from a file and a parser error.
-    *
-    * @param      {object}   entry - A data entry with `code`, `parseError`.
-    *
-    * @property   {object}   code - Code to parse / log.
-    *
-    * @property   {object}   parserError - Parser error object.
-    *
-    * @property   {string}   [message] - Additional message to prepend.
-    *
-    * @param      {string}   event - The log event to invoke.
-    *
-    * @param      {string}   headerColor - ANSI color to apply for header entry / message.
-    *
-    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
-    */
-   _showFileParserError(entry, event, headerColor, bodyColor)
-   {
-      if (typeof entry.parserError.message !== 'undefined')
-      {
-         this._eventbus.trigger(event, `${headerColor}${entry.parserError.message}[0m`);
-      }
-
-      const start = entry.parserError.line - 5;
-      const end = entry.parserError.line + 3;
-
-      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:lines:read', entry.filePath, start, end);
-
-      this._eventbus.trigger(event, `${bodyColor}${targetLines.join('\n')}[0m`);
-   }
-
-   /**
-    * Show invalid code entry from a file and an AST node.
-    *
-    * @param      {object}   entry - A data entry with `code`, `parseError`.
-    *
-    * @property   {object}   code - Code to parse / log.
-    *
-    * @property   {ASTNode}  node - An AST node to use to find comments and first line of node.
-    *
-    * @property   {string}   [message] - Additional message to prepend.
-    *
-    * @param      {string}   event - The log event to invoke.
-    *
-    * @param      {string}   bodyColor - An ANSI color code to apply to the body.
-    */
-   _showFileNode(entry, event, bodyColor)
-   {
-      const result = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
-       entry.filePath, entry.node, true);
-
-      this._eventbus.trigger(event, `${bodyColor}${result.text}[0m`);
+      this._invalidCode.length = 0;
    }
 }
 
