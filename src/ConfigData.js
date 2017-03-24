@@ -77,7 +77,7 @@ export default class ConfigData
 
          'fullStackTrace': false,
 
-         'includeSource': true,
+         'includeSource': false,
 
          'index': './README.md',
 
