@@ -72,15 +72,3 @@ export function onPreGenerate(ev)
       ev.eventbus.trigger('plugins:add', { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() });
    }
 }
-
-/**
- * Handle any removal of data plugins for documentation regeneration.
- *
- * @param {PluginEvent} ev - The plugin event.
- */
-export function onRegenerate(ev)
-{
-   const eventbus = ev.eventbus;
-
-   eventbus.trigger('plugins:remove', 'tjsdoc-docs-common');
-}
