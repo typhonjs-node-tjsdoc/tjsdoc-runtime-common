@@ -32,31 +32,13 @@ export class DocDB
     */
    filterDoc(doc)
    {
+      // Filter out any file content.
+      if (doc.content) { doc.content = ''; }
+
       if (this._config)
       {
-         // Filter out any file content.
-         if (doc.content) { doc.content = ''; }
-
-         switch (doc.kind)
-         {
-            case 'file':
-               // Filter out any AST data as it is not further processed.
-               if (!this._config.outputASTData) { delete doc.node; }
-
-               //if (!this._config.includeSource) { doc.content = ''; }
-               break;
-
-            case 'testFile':
-               // Filter out any file content.
-               //if (!this._config.includeSource) { doc.content = ''; }
-               break;
-
-            // Catch all for any unmatched doc kind above.
-            default:
-               // Filter out any AST data as it is not further processed.
-               if (!this._config.outputASTData) { delete doc.node; }
-               break;
-         }
+         // Filter out any AST data as it is not further processed.
+         if (!this._config.outputASTData) { delete doc.node; }
       }
 
       return doc;
