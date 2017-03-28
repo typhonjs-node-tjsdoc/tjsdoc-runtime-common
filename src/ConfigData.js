@@ -99,7 +99,7 @@ export default class ConfigData
 
          'undocumentIdentifier': true,
 
-         'unexportIdentifier': false
+         'unexportIdentifier': true
       };
    }
 
