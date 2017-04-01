@@ -1,4 +1,5 @@
-import path    from 'path';
+import path       from 'path';
+import Resolver   from 'typhonjs-path-resolver';
 
 /**
  * Provides event bindings to generate DocObject and AST data for in memory code and files for main and tests.
@@ -21,20 +22,58 @@ export default class GenerateDocData
       this._eventbus.on('tjsdoc:system:generate:code:doc:data', this.generateCodeDocData, this);
       this._eventbus.on('tjsdoc:system:generate:file:doc:data', this.generateFileDocData, this);
       this._eventbus.on('tjsdoc:system:generate:test:doc:data', this.generateTestDocData, this);
+
+      this._eventbus.on('tjsdoc:system:path:resolver:create',
+       (filePath, rootPath = this._rootPath, packageName = this._packageName, mainFilePath = this._mainFilePath) =>
+      {
+         return new Resolver(rootPath, filePath, packageName, mainFilePath);
+      });
    }
 
    /**
-    * Store TJSDocConfig object.
+    * Store the TJSDocConfig object and other relevant data for generating doc data.
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onStart(ev)
+   onPreGenerate(ev)
    {
       /**
        * @type {TJSDocConfig}
        * @private
        */
       this._config = ev.data.config;
+
+      /**
+       * @type {DocFactory}
+       * @private
+       */
+      this._docFactory = ev.eventbus.triggerSync('tjsdoc:system:doc:factory:get');
+
+      /**
+       * @type {TestDocFactory}
+       * @private
+       */
+      this._testDocFactory = ev.eventbus.triggerSync('tjsdoc:system:doc:factory:test:get');
+
+      /**
+       * The target project current working directory.
+       * @type {string}
+       */
+      this._rootPath = ev.data.config._dirPath;
+
+      /**
+       * The target project NPM package name.
+       * @type {string}
+       */
+      this._packageName = ev.data.packageObj.name || void 0;
+
+      /**
+       * The target project NPM main file path.
+       * @type {string}
+       */
+      this._mainFilePath = ev.data.packageObj.main || void 0;
+
+      this._pathResolver = new Resolver(this._rootPath, '', this._packageName, this._mainFilePath);
    }
 
    /**
@@ -62,8 +101,10 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      // Traverse the file generating doc data.
-      s_TRAVERSE_CODE(code, docDB, this._eventbus, handleError);
+      this._resetDocFactory(this._docFactory, docDB, this._eventbus, handleError, void 0, code);
+
+      // Traverse the code generating doc data.
+      s_TRAVERSE(this._docFactory, this._eventbus, handleError);
 
       return docDB;
    }
@@ -114,8 +155,10 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
+      this._resetDocFactory(this._docFactory, docDB, this._eventbus, handleError, filePath);
+
       // Traverse the file generating doc data.
-      s_TRAVERSE_FILE(filePath, docDB, this._eventbus, handleError);
+      s_TRAVERSE(this._docFactory, this._eventbus, handleError);
 
       return docDB;
    }
@@ -165,102 +208,103 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      s_TRAVERSE_TEST(this._config.test.type, filePath, docDB, this._eventbus, handleError);
+      this._resetDocFactory(this._testDocFactory, docDB, this._eventbus, handleError, filePath);
+
+      // Traverse the file generating doc data.
+      s_TRAVERSE(this._testDocFactory, this._eventbus, handleError);
 
       return docDB;
+   }
+
+   /**
+    * Resets the given static doc factory
+    *
+    * @param {DocFactory|TestDocFactory}  docFactory - Target doc factory to reset.
+    *
+    * @param {DocDB}                      docDB - Target DocDB.
+    *
+    * @param {EventProxy}                 eventbus - The plugin eventbus proxy.
+    *
+    * @param {string}                     handleError - 'log' or 'throw' determines how any errors are handled.
+    *
+    * @param {string|undefined}           filePath - Target file path.
+    *
+    * @param {string}                     [code] - Target in memory code.
+    *
+    * @returns {*}
+    * @private
+    */
+   _resetDocFactory(docFactory, docDB, eventbus, handleError, filePath, code)
+   {
+      let ast;
+      let actualCode;
+
+      if (code)
+      {
+         filePath = 'unknown';
+
+         let message;
+
+         if (typeof code === 'string') { actualCode = code; }
+
+         // A code instance can be an object with an optional message to be displayed with any error.
+         if (typeof code === 'object')
+         {
+            if (typeof code.code === 'string') { actualCode = code.code; }
+            if (typeof code.message === 'string') { message = code.message; }
+            if (typeof code.filePath === 'string') { filePath = code.filePath; }
+         }
+
+         try
+         {
+            ast = eventbus.triggerSync('tjsdoc:system:parser:code:source:parse', actualCode);
+         }
+         catch (parserError)
+         {
+            switch (handleError)
+            {
+               case 'log':
+                  eventbus.trigger('tjsdoc:system:invalid:code:add',
+                   { code: actualCode, filePath, message, parserError });
+                  return void 0;
+
+               case 'throw':
+                  throw parserError;
+            }
+         }
+      }
+      else
+      {
+         try
+         {
+            ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
+         }
+         catch (parserError)
+         {
+            switch (handleError)
+            {
+               case 'log':
+                  eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
+                  return;
+
+               case 'throw':
+                  throw parserError;
+            }
+         }
+      }
+
+      this._pathResolver.setPathData(this._rootPath, filePath, this._packageName, this._mainFilePath);
+
+      docFactory.reset(ast, docDB, this._pathResolver, eventbus, actualCode);
    }
 }
 
 // Module private ---------------------------------------------------------------------------------------------------
 
 /**
- * Traverse doc comments in given code.
- *
- * @param {object|string}  code - target JavaScript code.
- *
- * @param {DocDB}          [docDB] - The target DocDB instance; or one will be created.
- *
- * @param {EventProxy}     eventbus - The plugin event proxy.
- *
- * @param {string}         handleError - Determines how to handle errors. Options are `log` and `throw` with the
- *                                       default being to throw any errors encountered.
- *
- * @returns {Object} - return document that is traversed.
- *
- * @property {DocObject[]} docData - this is contained JavaScript file.
- *
- * @property {AST}         ast - this is AST of JavaScript file.
- *
- * @private
- */
-const s_TRAVERSE_CODE = (code, docDB, eventbus, handleError) =>
-{
-   let ast;
-
-   let actualCode;
-   let filePath = 'unknown';
-   let message;
-
-   if (typeof code === 'string') { actualCode = code; }
-
-   // A code instance can be an object with an optional message to be displayed with any error.
-   if (typeof code === 'object')
-   {
-      if (typeof code.code === 'string') { actualCode = code.code; }
-      if (typeof code.message === 'string') { message = code.message; }
-      if (typeof code.filePath === 'string') { filePath = code.filePath; }
-   }
-
-   try
-   {
-      ast = eventbus.triggerSync('tjsdoc:system:parser:code:source:parse', actualCode);
-   }
-   catch (parserError)
-   {
-      switch (handleError)
-      {
-         case 'log':
-            eventbus.trigger('tjsdoc:system:invalid:code:add', { code: actualCode, filePath, message, parserError });
-            return void 0;
-
-         case 'throw':
-            throw parserError;
-      }
-   }
-
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:code:create',
-    { ast, docDB, code: actualCode, filePath });
-
-   eventbus.trigger('typhonjs:ast:walker:traverse', ast,
-   {
-      enterNode: (node, parent) =>
-      {
-         try
-         {
-            factory.push(node, parent);
-         }
-         catch (fatalError)
-         {
-            switch (handleError)
-            {
-               case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add', { code: actualCode, message, node, fatalError });
-                  break;
-
-               case 'throw':
-                  throw fatalError;
-            }
-         }
-      }
-   });
-};
-
-/**
  * Traverse doc comments in given file.
  *
- * @param {string}      filePath - target JavaScript file path.
- *
- * @param {DocDB}       [docDB] - The target DocDB instance; or one will be created.
+ * @param {DocFactory|TestDocFactory}  docFactory - Target doc factory to reset.
  *
  * @param {EventProxy}  eventbus - The plugin event proxy.
  *
@@ -268,113 +312,23 @@ const s_TRAVERSE_CODE = (code, docDB, eventbus, handleError) =>
  *                                    default being to throw any errors encountered.
  * @private
  */
-const s_TRAVERSE_FILE = (filePath, docDB, eventbus, handleError) =>
+const s_TRAVERSE = (docFactory, eventbus, handleError) =>
 {
-   let ast;
-
-   try
-   {
-      ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
-   }
-   catch (parserError)
-   {
-      switch (handleError)
-      {
-         case 'log':
-            eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
-            return;
-
-         case 'throw':
-            throw parserError;
-      }
-   }
-
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:file:create', { ast, docDB, filePath });
-
-   eventbus.trigger('typhonjs:ast:walker:traverse', ast,
+   eventbus.trigger('typhonjs:ast:walker:traverse', docFactory.ast,
    {
       enterNode: (node, parent) =>
       {
          try
          {
-            factory.push(node, parent);
+            docFactory.push(node, parent);
          }
          catch (fatalError)
          {
             switch (handleError)
             {
                case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, node, fatalError });
-                  break;
-
-               case 'throw':
-                  throw fatalError;
-            }
-         }
-      }
-   });
-};
-
-/**
- * Traverse doc comments in test code files.
- *
- * @param {string}      type - test code type.
- *
- * @param {string}      filePath - target test code file path.
- *
- * @param {DocDB}       [docDB] - The target DocDB instance; or one will be created.
- *
- * @param {EventProxy}  eventbus - The plugin event proxy.
- *
- * @param {string}      handleError - Determines how to handle errors. Options are `log` and `throw` with the
- *                                    default being to throw any errors encountered.
- *
- * @returns {Object} return document info that is traversed.
- *
- * @property {DocObject[]} docData - this is contained test code.
- *
- * @property {AST}         ast - this is AST of test code.
- *
- * @private
- */
-const s_TRAVERSE_TEST = (type, filePath, docDB, eventbus, handleError) =>
-{
-   let ast;
-
-   try
-   {
-      ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
-   }
-   catch (parserError)
-   {
-      switch (handleError)
-      {
-         case 'log':
-            eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
-            return void 0;
-
-         case 'throw':
-            throw parserError;
-      }
-   }
-
-   const factory = eventbus.triggerSync('tjsdoc:system:doc:factory:test:create',
-    { type, ast, docDB, filePath });
-
-   eventbus.trigger('typhonjs:ast:walker:traverse', ast,
-   {
-      enterNode: (node, parent) =>
-      {
-         try
-         {
-            factory.push(node, parent);
-         }
-         catch (fatalError)
-         {
-            switch (handleError)
-            {
-               case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, node, fatalError });
+                  eventbus.trigger('tjsdoc:system:invalid:code:add',
+                   { filePath: docFactory.filePath, node, fatalError });
                   break;
 
                case 'throw':

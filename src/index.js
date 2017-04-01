@@ -10,7 +10,6 @@ import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
 import LintDocLogger       from './utils/LintDocLogger.js';
 import MergeDocData        from './utils/MergeDocData.js';
 import NamingUtil          from './utils/NamingUtil.js';
-import PathResolver        from './utils/PathResolver.js';
 
 /**
  * Adds all common runtime plugins.
@@ -54,8 +53,7 @@ export function onPluginLoad(ev)
       { name: 'tjsdoc-file-util', instance: new FileUtil() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
-      { name: 'tjsdoc-parser-error', instance: ParserError },
-      { name: 'tjsdoc-path-resolver', instance: new PathResolver() }
+      { name: 'tjsdoc-parser-error', instance: ParserError }
    ]);
 }
 
