@@ -73,6 +73,10 @@ export default class GenerateDocData
        */
       this._mainFilePath = ev.data.packageObj.main || void 0;
 
+      /**
+       * A recycled path resolver instance to repeatedly use.
+       * @type {Resolver}
+       */
       this._pathResolver = new Resolver(this._rootPath, '', this._packageName, this._mainFilePath);
    }
 
@@ -101,10 +105,7 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      this._resetDocFactory(this._docFactory, docDB, this._eventbus, handleError, void 0, code);
-
-      // Traverse the code generating doc data.
-      s_TRAVERSE(this._docFactory, this._eventbus, handleError);
+      this._resetAndTraverse(this._docFactory, docDB, this._eventbus, handleError, void 0, code);
 
       return docDB;
    }
@@ -155,10 +156,7 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetDocFactory(this._docFactory, docDB, this._eventbus, handleError, filePath);
-
-      // Traverse the file generating doc data.
-      s_TRAVERSE(this._docFactory, this._eventbus, handleError);
+      this._resetAndTraverse(this._docFactory, docDB, this._eventbus, handleError, filePath);
 
       return docDB;
    }
@@ -208,16 +206,13 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetDocFactory(this._testDocFactory, docDB, this._eventbus, handleError, filePath);
-
-      // Traverse the file generating doc data.
-      s_TRAVERSE(this._testDocFactory, this._eventbus, handleError);
+      this._resetAndTraverse(this._testDocFactory, docDB, this._eventbus, handleError, filePath);
 
       return docDB;
    }
 
    /**
-    * Resets the given static doc factory
+    * Resets the given static doc factory and traverses the AST for doc object / DocDB insertion.
     *
     * @param {DocFactory|TestDocFactory}  docFactory - Target doc factory to reset.
     *
@@ -234,7 +229,7 @@ export default class GenerateDocData
     * @returns {*}
     * @private
     */
-   _resetDocFactory(docFactory, docDB, eventbus, handleError, filePath, code)
+   _resetAndTraverse(docFactory, docDB, eventbus, handleError, filePath, code)
    {
       let ast;
       let actualCode;
@@ -295,46 +290,6 @@ export default class GenerateDocData
 
       this._pathResolver.setPathData(this._rootPath, filePath, this._packageName, this._mainFilePath);
 
-      docFactory.reset(ast, docDB, this._pathResolver, eventbus, actualCode);
+      docFactory.resetAndTraverse(ast, docDB, this._pathResolver, eventbus, handleError, actualCode);
    }
 }
-
-// Module private ---------------------------------------------------------------------------------------------------
-
-/**
- * Traverse doc comments in given file.
- *
- * @param {DocFactory|TestDocFactory}  docFactory - Target doc factory to reset.
- *
- * @param {EventProxy}  eventbus - The plugin event proxy.
- *
- * @param {string}      handleError - Determines how to handle errors. Options are `log` and `throw` with the
- *                                    default being to throw any errors encountered.
- * @private
- */
-const s_TRAVERSE = (docFactory, eventbus, handleError) =>
-{
-   eventbus.trigger('typhonjs:ast:walker:traverse', docFactory.ast,
-   {
-      enterNode: (node, parent) =>
-      {
-         try
-         {
-            docFactory.push(node, parent);
-         }
-         catch (fatalError)
-         {
-            switch (handleError)
-            {
-               case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add',
-                   { filePath: docFactory.filePath, node, fatalError });
-                  break;
-
-               case 'throw':
-                  throw fatalError;
-            }
-         }
-      }
-   });
-};
