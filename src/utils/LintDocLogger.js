@@ -103,8 +103,8 @@ export default class LintDocLogger
 
       const absFilePath = path.resolve(this._config._dirPath, doc.filePath);
 
-      const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
-       absFilePath, doc.node);
+      const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get', doc.node,
+       absFilePath);
 
       const lintMessage = `\n[33mwarning: signature mismatch: ${doc.name} ${doc.filePath}#${comment.startLine}[32m\n${
        comment.text}[0m'`;

@@ -206,7 +206,7 @@ export default class InvalidCodeLogger
    _buildCodeNode(entry, bodyColor)
    {
       const result = this._eventbus.triggerSync('tjsdoc:system:ast:code:comment:first:line:from:node:get',
-       entry.code, entry.node, true);
+       entry.node, entry.code, true);
 
       entry._output += `${bodyColor}${result.text}[0m`;
    }
@@ -257,7 +257,7 @@ export default class InvalidCodeLogger
    _buildFileNode(entry, bodyColor)
    {
       const result = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get',
-       entry.filePath, entry.node, true);
+       entry.node, entry.filePath, true);
 
       entry._output += `${bodyColor}${result.text}[0m`;
    }
