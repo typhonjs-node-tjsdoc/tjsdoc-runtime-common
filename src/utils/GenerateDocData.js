@@ -44,16 +44,16 @@ export default class GenerateDocData
       this._config = ev.data.config;
 
       /**
-       * @type {DocFactory}
+       * @type {DocGenerator}
        * @private
        */
-      this._docFactory = ev.eventbus.triggerSync('tjsdoc:system:doc:factory:get');
+      this._docGenerator = ev.eventbus.triggerSync('tjsdoc:system:doc:generator:get');
 
       /**
-       * @type {TestDocFactory}
+       * @type {TestDocGenerator}
        * @private
        */
-      this._testDocFactory = ev.eventbus.triggerSync('tjsdoc:system:doc:factory:test:get');
+      this._testDocGenerator = ev.eventbus.triggerSync('tjsdoc:system:doc:generator:test:get');
 
       /**
        * The target project current working directory.
@@ -105,7 +105,7 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      this._resetAndTraverse(this._docFactory, docDB, handleError, void 0, code);
+      this._resetAndTraverse(this._docGenerator, docDB, handleError, void 0, code);
 
       return docDB;
    }
@@ -156,7 +156,7 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._docFactory, docDB, handleError, filePath);
+      this._resetAndTraverse(this._docGenerator, docDB, handleError, filePath);
 
       return docDB;
    }
@@ -206,28 +206,28 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._testDocFactory, docDB, handleError, filePath);
+      this._resetAndTraverse(this._testDocGenerator, docDB, handleError, filePath);
 
       return docDB;
    }
 
    /**
-    * Resets the given static doc factory and traverses the AST for doc object / DocDB insertion.
+    * Resets the given static doc generator and traverses the AST for doc object / DocDB insertion.
     *
-    * @param {DocFactory|TestDocFactory}  docFactory - Target doc factory to reset.
+    * @param {DocGenerator|TestDocGenerator} docGenerator - Target doc generator to reset.
     *
-    * @param {DocDB}                      docDB - Target DocDB.
+    * @param {DocDB}                         docDB - Target DocDB.
     *
-    * @param {string}                     handleError - 'log' or 'throw' determines how any errors are handled.
+    * @param {string}                        handleError - 'log' or 'throw' determines how any errors are handled.
     *
-    * @param {string|undefined}           filePath - Target file path.
+    * @param {string|undefined}              filePath - Target file path.
     *
-    * @param {string}                     [code] - Target in memory code.
+    * @param {string}                        [code] - Target in memory code.
     *
     * @returns {*}
     * @private
     */
-   _resetAndTraverse(docFactory, docDB, handleError, filePath, code)
+   _resetAndTraverse(docGenerator, docDB, handleError, filePath, code)
    {
       let ast;
       let actualCode;
@@ -288,6 +288,6 @@ export default class GenerateDocData
 
       this._pathResolver.setPathData(this._rootPath, filePath, this._packageName, this._mainFilePath);
 
-      docFactory.resetAndTraverse(ast, docDB, this._pathResolver, this._eventbus, handleError, actualCode);
+      docGenerator.resetAndTraverse(ast, docDB, this._pathResolver, this._eventbus, handleError, actualCode);
    }
 }
