@@ -105,7 +105,7 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      this._resetAndTraverse(this._docFactory, docDB, this._eventbus, handleError, void 0, code);
+      this._resetAndTraverse(this._docFactory, docDB, handleError, void 0, code);
 
       return docDB;
    }
@@ -156,7 +156,7 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._docFactory, docDB, this._eventbus, handleError, filePath);
+      this._resetAndTraverse(this._docFactory, docDB, handleError, filePath);
 
       return docDB;
    }
@@ -206,7 +206,7 @@ export default class GenerateDocData
 
       if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._testDocFactory, docDB, this._eventbus, handleError, filePath);
+      this._resetAndTraverse(this._testDocFactory, docDB, handleError, filePath);
 
       return docDB;
    }
@@ -218,8 +218,6 @@ export default class GenerateDocData
     *
     * @param {DocDB}                      docDB - Target DocDB.
     *
-    * @param {EventProxy}                 eventbus - The plugin eventbus proxy.
-    *
     * @param {string}                     handleError - 'log' or 'throw' determines how any errors are handled.
     *
     * @param {string|undefined}           filePath - Target file path.
@@ -229,7 +227,7 @@ export default class GenerateDocData
     * @returns {*}
     * @private
     */
-   _resetAndTraverse(docFactory, docDB, eventbus, handleError, filePath, code)
+   _resetAndTraverse(docFactory, docDB, handleError, filePath, code)
    {
       let ast;
       let actualCode;
@@ -252,14 +250,14 @@ export default class GenerateDocData
 
          try
          {
-            ast = eventbus.triggerSync('tjsdoc:system:parser:code:source:parse', actualCode);
+            ast = this._eventbus.triggerSync('tjsdoc:system:parser:code:source:parse', actualCode);
          }
          catch (parserError)
          {
             switch (handleError)
             {
                case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add',
+                  this._eventbus.trigger('tjsdoc:system:invalid:code:add',
                    { code: actualCode, filePath, message, parserError });
                   return void 0;
 
@@ -272,14 +270,14 @@ export default class GenerateDocData
       {
          try
          {
-            ast = eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
+            ast = this._eventbus.triggerSync('tjsdoc:system:parser:code:file:parse', filePath);
          }
          catch (parserError)
          {
             switch (handleError)
             {
                case 'log':
-                  eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
+                  this._eventbus.trigger('tjsdoc:system:invalid:code:add', { filePath, parserError });
                   return;
 
                case 'throw':
@@ -290,6 +288,6 @@ export default class GenerateDocData
 
       this._pathResolver.setPathData(this._rootPath, filePath, this._packageName, this._mainFilePath);
 
-      docFactory.resetAndTraverse(ast, docDB, this._pathResolver, eventbus, handleError, actualCode);
+      docFactory.resetAndTraverse(ast, docDB, this._pathResolver, this._eventbus, handleError, actualCode);
    }
 }
