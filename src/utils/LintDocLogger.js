@@ -89,7 +89,7 @@ export default class LintDocLogger
     */
    onHandleDocObject(ev)
    {
-      const doc = ev.data.doc;
+      const doc = ev.data.docObject;
 
       // Only handle method and function docs.
       if (doc.undocument || !doc.node || (doc.kind !== 'method' && doc.kind !== 'function')) { return; }

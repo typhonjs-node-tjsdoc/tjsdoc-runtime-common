@@ -35,9 +35,12 @@ export class DocDB
       // Filter out any file content.
       if (doc.content) { doc.content = ''; }
 
+      // Filter out any AST.
+      if (doc.ast) { delete doc.ast; }
+
       if (this._config)
       {
-         // Filter out any AST data as it is not further processed.
+         // Filter out any AST node data as it is not further processed.
          if (!this._config.outputASTData) { delete doc.node; }
       }
 
@@ -236,27 +239,29 @@ export class DocDB
     * insertion into the DocDB the doc value is filtered removing any unnecessary data such as AST content
     * based on the target project TJSDocConfig instance.
     *
-    * @param {DocObject}   docObject - DocObject to insert.
+    * @param {StaticDoc}   staticDoc - The static doc generator to retrieve a DocObject to insert.
     *
-    * @param {boolean}     destroy - Destroys the DocObject removing all internal data references so that it can go
-    *                                out of scope.
+    * @param {boolean}     [reset=true] - Resets the StaticDoc removing all internal data references so that it can
+    *                                     go out of scope.
     * @returns {Taffy}
     * @private
     */
-   insertDocObject(docObject, destroy = true)
+   insertStaticDoc(staticDoc, reset = true)
    {
-      const doc = docObject.value;
+      // Retrieve the docObject data.
+      const docObject = staticDoc.value;
 
+      // If this DocDB is associated with an eventbus then invoke `onHandleDocObject`.
       if (this._eventbus)
       {
-         this._eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocObject', void 0, { doc });
+         this._eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocObject', void 0, { docObject });
       }
 
-      // Destroys the docObject.
-      if (destroy && typeof docObject.destroy === 'function') { docObject.destroy(); }
+      // Resets the StaticDoc so that all data goes out of scope.
+      if (reset && typeof staticDoc.reset === 'function') { staticDoc.reset(); }
 
       // Inserts the doc object into the TaffyDB instance.
-      return this._docDB.insert(this.filterDoc(doc));
+      return this._docDB.insert(this.filterDoc(docObject));
    }
 
    /**
