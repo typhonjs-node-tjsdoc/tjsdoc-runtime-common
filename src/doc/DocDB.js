@@ -75,23 +75,39 @@ export class DocDB
     */
    findAccessDocs(doc, kind, isStatic = true)
    {
-      const cond = { kind, 'static': isStatic };
+      const cond = [{ kind, 'static': isStatic }];
 
-      if (doc) { cond.memberof = doc.longname; }
+      if (doc) { cond[0].memberof = doc.longname; }
 
       switch (kind)
       {
          case 'class':
-            cond.interface = false;
+            cond[0].interface = false;
             break;
 
          case 'interface':
-            cond.kind = 'class';
-            cond.interface = true;
+            cond[0].kind = 'class';
+            cond[0].interface = true;
             break;
 
          case 'member':
-            cond.kind = ['member', 'get', 'set'];
+            // cond.kind = ['member', 'get', 'set'];
+         {
+            // Push additional condition for class accessor methods.
+            const cond2 = { 'kind': 'ClassMethod', 'qualifier': ['get', 'set'], 'static': isStatic };
+            if (doc) { cond2.memberof = doc.longname; }
+            cond.push(cond2);
+            break;
+         }
+
+         case 'constructor':
+            cond[0].kind = 'ClassMethod';
+            cond[0].qualifier = 'constructor';
+            break;
+
+         case 'method':
+            cond[0].kind = 'ClassMethod';
+            cond[0].qualifier = 'method';
             break;
       }
 
@@ -129,24 +145,39 @@ export class DocDB
     *
     * @param {string} name - Target identifier name.
     * @param {string} [kind] - Target kind.
+    * @param {string} [qualifier] - Target qualifier.
     *
     * @returns {DocObject[]} found doc objects.
     */
-   findByName(name, kind = void 0)
+   findByName(name, kind = void 0, qualifier = void 0)
    {
       let docs;
 
-      docs = this.findSorted(null, kind ? { longname: name, kind } : { longname: name });
+      const query = { longname: name };
+
+      if (kind) { query.kind = kind; }
+      if (qualifier) { query.qualifier = qualifier; }
+
+      // docs = this.findSorted(null, kind ? { longname: name, kind } : { longname: name });
+      docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
 
-      docs = this.findSorted(null, kind ? { name, kind } : { name });
+      delete query.longname;
+      query.name = name;
+
+      // docs = this.findSorted(null, kind ? { name, kind } : { name });
+      docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
 
       const regex = new RegExp(`[~]${name.replace('*', '\\*')}$`); // if name is `*`, need to escape.
 
-      docs = this.findSorted(null, kind ? { longname: { regex }, kind } : { longname: { regex } });
+      delete query.name;
+      query.longname = { regex };
+
+      // docs = this.findSorted(null, kind ? { longname: { regex }, kind } : { longname: { regex } });
+      docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
 
