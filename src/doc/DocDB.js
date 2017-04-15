@@ -60,11 +60,9 @@ export class DocDB
    }
 
    /**
-    * find doc object for each access.
+    * Find doc objects for each access based on the given query.
     *
-    * @param {DocObject}   doc - parent doc object.
-    * @param {string}      kind - kind property condition.
-    * @param {boolean}     [isStatic=true] - static property condition
+    * @param {string}   query - A TaffyDB query.
     *
     * @returns {*[]} found doc objects.
     * ```
@@ -73,44 +71,11 @@ export class DocDB
     * (Array[]) 2 - ['Private', DocObject[]]
     * ```
     */
-   findAccessDocs(doc, kind, isStatic = true)
+   findAccessDocs(query)
    {
-      const cond = { kind, 'static': isStatic };
-
-      if (doc) { cond.memberof = doc.longname; }
-
-      switch (kind)
-      {
-         case 'class':
-            cond.interface = false;
-            break;
-
-         case 'interface':
-            cond.kind = 'class';
-            cond.interface = true;
-            break;
-
-         case 'CategoryClassMember':
-         {
-            delete cond.kind;
-            cond.category = 'ClassMember';
-            break;
-         }
-
-         case 'constructor':
-            cond.kind = 'ClassMethod';
-            cond.qualifier = 'constructor';
-            break;
-
-         case 'method':
-            cond.kind = 'ClassMethod';
-            cond.qualifier = 'method';
-            break;
-      }
-
-      const publicDocs = this.find(cond, { access: 'public' }).filter((v) => !v.builtinVirtual);
-      const protectedDocs = this.find(cond, { access: 'protected' }).filter((v) => !v.builtinVirtual);
-      const privateDocs = this.find(cond, { access: 'private' }).filter((v) => !v.builtinVirtual);
+      const publicDocs = this.find(query, { access: 'public' }).filter((v) => !v.builtinVirtual);
+      const protectedDocs = this.find(query, { access: 'protected' }).filter((v) => !v.builtinVirtual);
+      const privateDocs = this.find(query, { access: 'private' }).filter((v) => !v.builtinVirtual);
 
       // access docs
       return [['Public', publicDocs], ['Protected', protectedDocs], ['Private', privateDocs]];
