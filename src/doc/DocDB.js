@@ -120,7 +120,6 @@ export class DocDB
       if (kind) { query.kind = kind; }
       if (qualifier) { query.qualifier = qualifier; }
 
-      // docs = this.findSorted(null, kind ? { longname: name, kind } : { longname: name });
       docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
@@ -128,7 +127,6 @@ export class DocDB
       delete query.longname;
       query.name = name;
 
-      // docs = this.findSorted(null, kind ? { name, kind } : { name });
       docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
@@ -138,7 +136,6 @@ export class DocDB
       delete query.name;
       query.longname = { regex };
 
-      // docs = this.findSorted(null, kind ? { longname: { regex }, kind } : { longname: { regex } });
       docs = this.findSorted(null, query);
 
       if (docs.length) { return docs; }
@@ -156,7 +153,7 @@ export class DocDB
          {
             for (const superLongname of parentDoc._custom_extends_chains)
             {
-               if (docs.length) { return this.find({ memberof: superLongname, name: childName }); }  // docs
+               if (docs.length) { return this.find({ memberof: superLongname, name: childName }); }
             }
          }
       }
