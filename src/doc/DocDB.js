@@ -84,16 +84,16 @@ export class DocDB
    /**
     * Find all identifiers with grouping by kind.
     *
-    * @returns {{class: DocObject[], interface: DocObject[], function: DocObject[], variable: DocObject[], typedef: DocObject[], external: DocObject[]}} found doc objects.
+    * @returns {{ModuleClass: DocObject[], ModuleFunction: DocObject[], ModuleInterface: DocObject[], ModuleVariable: DocObject[], VirtualExternal: DocObject[], VirtualTypedef: DocObject[]}} found doc objects.
     */
    findAllIdentifiersKindGrouping()
    {
       return {
          ModuleClass: this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
-         ModuleInterface: this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
          ModuleFunction: this.find([{ kind: 'ModuleFunction' }]),
+         ModuleInterface: this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
          ModuleVariable: this.find([{ category: 'ModuleVariable' }]),
-         external: this.find([{ kind: 'external' }]).filter((v) => !v.builtinVirtual),
+         VirtualExternal: this.find([{ kind: 'VirtualExternal' }]).filter((v) => !v.builtinVirtual),
          VirtualTypedef: this.find([{ kind: 'VirtualTypedef' }])
       };
    }
