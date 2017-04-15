@@ -16,7 +16,7 @@ export class DocDB
    {
       /**
        * TaffyDB instance of docData.
-       * @type {Taffy}
+       * @type {TaffyDB}
        */
       this._docDB = taffy(docData);
 
@@ -201,7 +201,7 @@ export class DocDB
     *
     * @param {DocObject|DocObject[]|DocDB}   objectOrDB - A single instance or array of DocObjects or DocDB to merge.
     *
-    * @returns {Taffy}
+    * @returns {TaffyDB}
     */
    insert(objectOrDB)
    {
@@ -232,7 +232,7 @@ export class DocDB
     *
     * @param {boolean}     [reset=true] - Resets the StaticDoc removing all internal data references so that it can
     *                                     go out of scope.
-    * @returns {Taffy}
+    * @returns {TaffyDB}
     * @private
     */
    insertStaticDoc(staticDoc, reset = true)
@@ -262,7 +262,7 @@ export class DocDB
     * @param {*}                             key - Identity column to be used to match records against the existing
     *                                              db. The TaffyDB default is: `id`.
     *
-    * @returns {Taffy}
+    * @returns {TaffyDB}
     */
    merge(objectOrDB, key = void 0)
    {
@@ -324,7 +324,7 @@ export class DocDB
     * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
     * @see http://www.taffydb.com/
-    * @returns {Taffy}
+    * @returns {TaffyDB}
     */
    query(...query)
    {
