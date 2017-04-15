@@ -83,12 +83,12 @@ export class DocDB
    findIdentifierKindDocs()
    {
       return {
-         ModuleClass: this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
-         ModuleFunction: this.find([{ kind: 'ModuleFunction' }]),
-         ModuleInterface: this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
-         ModuleVariable: this.find([{ category: 'ModuleVariable' }]),
-         VirtualExternal: this.find([{ kind: 'VirtualExternal' }]).filter((v) => !v.builtinVirtual),
-         VirtualTypedef: this.find([{ kind: 'VirtualTypedef' }])
+         ModuleClass: this.find({ 'kind': 'ModuleClass', 'interface': false }),
+         ModuleFunction: this.find({ kind: 'ModuleFunction' }),
+         ModuleInterface: this.find({ 'kind': 'ModuleClass', 'interface': true }),
+         ModuleVariable: this.find({ category: 'ModuleVariable' }),
+         VirtualExternal: this.find({ kind: 'VirtualExternal' }).filter((v) => !v.builtinVirtual),
+         VirtualTypedef: this.find({ kind: 'VirtualTypedef' })
       };
    }
 
