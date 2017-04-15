@@ -92,7 +92,7 @@ export default class LintDocLogger
       const doc = ev.data.docObject;
 
       // Only handle class method and module function docs.
-      if (doc.undocument || !doc.node || (doc.kind !== 'ClassMethod' && doc.kind !== 'function')) { return; }
+      if (doc.undocument || !doc.node || (doc.kind !== 'ClassMethod' && doc.kind !== 'ModuleFunction')) { return; }
 
       // Get AST / parser specific parsing of the node returning any method params.
       const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', doc.node);

@@ -89,12 +89,12 @@ export class DocDB
    findAllIdentifiersKindGrouping()
    {
       return {
-         'ModuleClass': this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
-         'ModuleInterface': this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
-         'function': this.find([{ kind: 'function' }]),
-         'ModuleVariable': this.find([{ category: 'ModuleVariable' }]),
-         'typedef': this.find([{ kind: 'typedef' }]),
-         'external': this.find([{ kind: 'external' }]).filter((v) => !v.builtinVirtual)
+         ModuleClass: this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
+         ModuleInterface: this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
+         ModuleFunction: this.find([{ kind: 'ModuleFunction' }]),
+         ModuleVariable: this.find([{ category: 'ModuleVariable' }]),
+         typedef: this.find([{ kind: 'typedef' }]),
+         external: this.find([{ kind: 'external' }]).filter((v) => !v.builtinVirtual)
       };
    }
 
