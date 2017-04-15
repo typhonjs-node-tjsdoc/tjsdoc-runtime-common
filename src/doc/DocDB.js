@@ -92,7 +92,7 @@ export class DocDB
          'class': this.find([{ 'kind': 'class', 'interface': false }]),
          'interface': this.find([{ 'kind': 'class', 'interface': true }]),
          'function': this.find([{ kind: 'function' }]),
-         'variable': this.find([{ kind: 'variable' }]),
+         'ModuleVariable': this.find([{ category: 'ModuleVariable' }]),
          'typedef': this.find([{ kind: 'typedef' }]),
          'external': this.find([{ kind: 'external' }]).filter((v) => !v.builtinVirtual)
       };
