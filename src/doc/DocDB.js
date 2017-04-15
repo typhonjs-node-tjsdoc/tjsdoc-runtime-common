@@ -89,8 +89,8 @@ export class DocDB
    findAllIdentifiersKindGrouping()
    {
       return {
-         'class': this.find([{ 'kind': 'class', 'interface': false }]),
-         'interface': this.find([{ 'kind': 'class', 'interface': true }]),
+         'ModuleClass': this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
+         'ModuleInterface': this.find([{ 'kind': 'ModuleClass', 'interface': true }]),
          'function': this.find([{ kind: 'function' }]),
          'ModuleVariable': this.find([{ category: 'ModuleVariable' }]),
          'typedef': this.find([{ kind: 'typedef' }]),
@@ -150,7 +150,7 @@ export class DocDB
       {
          const parent = matched[1];
          const childName = matched[2];
-         const parentDoc = this.findByName(parent, 'class')[0];
+         const parentDoc = this.findByName(parent, 'ModuleClass')[0];
 
          if (parentDoc && parentDoc._custom_extends_chains)
          {
