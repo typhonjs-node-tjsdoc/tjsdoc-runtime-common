@@ -75,39 +75,36 @@ export class DocDB
     */
    findAccessDocs(doc, kind, isStatic = true)
    {
-      const cond = [{ kind, 'static': isStatic }];
+      const cond = { kind, 'static': isStatic };
 
-      if (doc) { cond[0].memberof = doc.longname; }
+      if (doc) { cond.memberof = doc.longname; }
 
       switch (kind)
       {
          case 'class':
-            cond[0].interface = false;
+            cond.interface = false;
             break;
 
          case 'interface':
-            cond[0].kind = 'class';
-            cond[0].interface = true;
+            cond.kind = 'class';
+            cond.interface = true;
             break;
 
-         case 'member':
-            // cond.kind = ['member', 'get', 'set'];
+         case 'CategoryClassMember':
          {
-            // Push additional condition for class accessor methods.
-            const cond2 = { 'kind': 'ClassMethod', 'qualifier': ['get', 'set'], 'static': isStatic };
-            if (doc) { cond2.memberof = doc.longname; }
-            cond.push(cond2);
+            delete cond.kind;
+            cond.category = 'ClassMember';
             break;
          }
 
          case 'constructor':
-            cond[0].kind = 'ClassMethod';
-            cond[0].qualifier = 'constructor';
+            cond.kind = 'ClassMethod';
+            cond.qualifier = 'constructor';
             break;
 
          case 'method':
-            cond[0].kind = 'ClassMethod';
-            cond[0].qualifier = 'method';
+            cond.kind = 'ClassMethod';
+            cond.qualifier = 'method';
             break;
       }
 
