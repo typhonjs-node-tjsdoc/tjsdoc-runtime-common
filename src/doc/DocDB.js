@@ -56,7 +56,7 @@ export class DocDB
     */
    find(...query)
    {
-      return this.findSorted(null, ...query);
+      return this.findSorted(void 0, ...query);
    }
 
    /**
@@ -114,14 +114,14 @@ export class DocDB
       if (kind) { query.kind = kind; }
       if (qualifier) { query.qualifier = qualifier; }
 
-      docs = this.findSorted(null, query);
+      docs = this.findSorted(void 0, query);
 
       if (docs.length) { return docs; }
 
       delete query.longname;
       query.name = name;
 
-      docs = this.findSorted(null, query);
+      docs = this.findSorted(void 0, query);
 
       if (docs.length) { return docs; }
 
@@ -130,7 +130,7 @@ export class DocDB
       delete query.name;
       query.longname = { regex };
 
-      docs = this.findSorted(null, query);
+      docs = this.findSorted(void 0, query);
 
       if (docs.length) { return docs; }
 
