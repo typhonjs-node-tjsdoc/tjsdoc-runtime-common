@@ -60,33 +60,27 @@ export class DocDB
    }
 
    /**
-    * Find doc objects for each access based on the given query.
+    * Returns an object Find doc objects for each access based on the given query.
     *
     * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
-    * @returns {*[]} found doc objects.
-    * ```
-    * (Array[]) 0 - ['Public', DocObject[]]
-    * (Array[]) 1 - ['Protected', DocObject[]]
-    * (Array[]) 2 - ['Private', DocObject[]]
-    * ```
+    * @returns {AccessDocs}
     */
    findAccessDocs(...query)
    {
-      const publicDocs = this.find(...query, { access: 'public' }).filter((v) => !v.builtinVirtual);
-      const protectedDocs = this.find(...query, { access: 'protected' }).filter((v) => !v.builtinVirtual);
-      const privateDocs = this.find(...query, { access: 'private' }).filter((v) => !v.builtinVirtual);
-
-      // access docs
-      return [['Public', publicDocs], ['Protected', protectedDocs], ['Private', privateDocs]];
+      return {
+         Public: this.find(...query, { access: 'public' }).filter((v) => !v.builtinVirtual),
+         Protected: this.find(...query, { access: 'protected' }).filter((v) => !v.builtinVirtual),
+         Private: this.find(...query, { access: 'private' }).filter((v) => !v.builtinVirtual)
+      };
    }
 
    /**
     * Find all identifiers with grouping by kind.
     *
-    * @returns {{ModuleClass: DocObject[], ModuleFunction: DocObject[], ModuleInterface: DocObject[], ModuleVariable: DocObject[], VirtualExternal: DocObject[], VirtualTypedef: DocObject[]}} found doc objects.
+    * @returns {IdentifierKindDocs} found doc objects.
     */
-   findAllIdentifiersKindGrouping()
+   findIdentifierKindDocs()
    {
       return {
          ModuleClass: this.find([{ 'kind': 'ModuleClass', 'interface': false }]),
@@ -305,8 +299,7 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:current:id:increment:get`, this.getCurrentIDAndIncrement, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find`, this.find, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:access:docs`, this.findAccessDocs, this);
-      this._eventbus.on(`${eventPrepend}:data:docdb:find:all:identifiers:kind:grouping`,
-       this.findAllIdentifiersKindGrouping, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:identifier:kind:docs`, this.findIdentifierKindDocs, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:by:name`, this.findByName, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:sorted`, this.findSorted, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:get`, () => this, this);
@@ -371,7 +364,7 @@ export class DocDB
 }
 
 /**
- * Adds event binding to create a DocDB instance from docData / DocObject[].
+ * Adds module scoped event binding to create a DocDB instance from docData / DocObject[].
  *
  * @param {PluginEvent} ev - The plugin event.
  */
