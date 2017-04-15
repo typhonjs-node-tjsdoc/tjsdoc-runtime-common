@@ -50,7 +50,7 @@ export class DocDB
    /**
     * Find doc object with given filter options.
     *
-    * @param {...Object} query - find query.
+    * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
     * @returns {DocObject[]} found doc objects.
     */
@@ -62,7 +62,7 @@ export class DocDB
    /**
     * Find doc objects for each access based on the given query.
     *
-    * @param {string}   query - A TaffyDB query.
+    * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
     * @returns {*[]} found doc objects.
     * ```
@@ -71,11 +71,11 @@ export class DocDB
     * (Array[]) 2 - ['Private', DocObject[]]
     * ```
     */
-   findAccessDocs(query)
+   findAccessDocs(...query)
    {
-      const publicDocs = this.find(query, { access: 'public' }).filter((v) => !v.builtinVirtual);
-      const protectedDocs = this.find(query, { access: 'protected' }).filter((v) => !v.builtinVirtual);
-      const privateDocs = this.find(query, { access: 'private' }).filter((v) => !v.builtinVirtual);
+      const publicDocs = this.find(...query, { access: 'public' }).filter((v) => !v.builtinVirtual);
+      const protectedDocs = this.find(...query, { access: 'protected' }).filter((v) => !v.builtinVirtual);
+      const privateDocs = this.find(...query, { access: 'private' }).filter((v) => !v.builtinVirtual);
 
       // access docs
       return [['Public', publicDocs], ['Protected', protectedDocs], ['Private', privateDocs]];
@@ -164,8 +164,8 @@ export class DocDB
    /**
     * Find doc objects sorted by name and any optional sorting criteria passed in as the first parameter.
     *
-    * @param {string}      [order] - doc objects order(``column asec`` or ``column desc``).
-    * @param {...Object}   [query] - condition objects - A TaffyDB filter query.
+    * @param {string}            [order] - doc objects order(``column asec`` or ``column desc``).
+    * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
     * @returns {DocObject[]} found doc objects.
     */
@@ -310,7 +310,7 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:find:by:name`, this.findByName, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:sorted`, this.findSorted, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:get`, () => this, this);
-      this._eventbus.on(`${eventPrepend}:data:docdb:insert:doc:object`, this.insertDocObject, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:insert:doc:static`, this.insertStaticDoc, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:insert`, this.insert, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:merge`, this.merge, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:query`, this.query, this);
@@ -321,8 +321,7 @@ export class DocDB
    /**
     * Performs a TaffyDB query.
     *
-    * @param {Array|function|object|string}  [query] - An optional TaffyDB query; one or more Strings, records, filter
-    *                                                  objects, arrays, or functions.
+    * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
     *
     * @see http://www.taffydb.com/
     * @returns {Taffy}
@@ -336,8 +335,8 @@ export class DocDB
     * Removes docs that match the query or if a DocDB is provided then all docs are removed by `filePath` in this
     * instance that are found in the given DocDB.
     *
-    * @param {Array|DocDB|function|object|string|undefined} [query] - A DocDB instance to query for doc file paths to
-    *                                                                 remove or an optional TaffyDB query.
+    * @param {...TaffyDBQuery}   [query] - A TaffyDB query.
+    *
     * @returns {number} - count of docs removed.
     */
    remove(...query)
