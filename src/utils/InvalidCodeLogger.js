@@ -305,6 +305,14 @@ export default class InvalidCodeLogger
    }
 
    /**
+    * During the TJSDoc `onComplete` callback log any invalid code warnings / errors.
+    */
+   onComplete()
+   {
+      this.logInvalidCode();
+   }
+
+   /**
     * Wires up InvalidCodeLogger on the plugin eventbus. The following event bindings are available:
     *
     * `tjsdoc:system:invalid:code:add`: Takes a data object which adds an invalid code object to be stored.

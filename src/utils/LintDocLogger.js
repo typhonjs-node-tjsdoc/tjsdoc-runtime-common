@@ -82,6 +82,16 @@ export default class LintDocLogger
    }
 
    /**
+    * During the TJSDoc `onComplete` callback if documentation linting is enabled then output any lint warnings.
+    *
+    * @param {PluginEvent} ev - The plugin event.
+    */
+   onComplete(ev)
+   {
+      if (ev.data.config.docLint) { this.logWarnings(); }
+   }
+
+   /**
     * Handles parsing any created DocObject before it is inserted into the DB. This always allows parsing `doc.node`
     * which may be removed prior to insertion into the DocDB if `outputASTData` is not true (the default).
     *
