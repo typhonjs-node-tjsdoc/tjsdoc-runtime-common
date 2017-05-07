@@ -191,6 +191,16 @@ export class DocDB
    }
 
    /**
+    * Gets any currently associated eventbus.
+    *
+    * @returns {EventProxy|TyphonEvents}
+    */
+   getEventbus()
+   {
+      return this._eventbus;
+   }
+
+   /**
     * Inserts an object, array of objects, or a DocDB into this instance.
     *
     * @param {DocObject|DocObject[]|DocDB}   objectOrDB - A single instance or array of DocObjects or DocDB to merge.
@@ -360,6 +370,17 @@ export class DocDB
    {
       this._docDB().remove();
       this._docID = 0;
+   }
+
+   /**
+    * Sets an active eventbus useful when inserting static docs for the `onHandleDocObject` plugin callbacks for DocDB
+    * instances which may not be added as a plugin.
+    *
+    * @param {TyphonEvents}   eventbus - An eventbus instance.
+    */
+   setEventbus(eventbus)
+   {
+      this._eventbus = eventbus;
    }
 }
 
