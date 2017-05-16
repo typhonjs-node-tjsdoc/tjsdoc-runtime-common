@@ -13,8 +13,15 @@ export class DocDB
     * @param {DocObject[]}    [docData] - DocObject data.
     *
     * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for this DocDB instance.
+    *
+    * @param {string}      [mode='generate'] - Defines the operational mode. By default this is `generate` which
+    *                                          normally occurs during initial full generation of all docs, but it is
+    *                                          possible to regenerate docs for a subset of files incrementally and in
+    *                                          this case mode is set to `regenerate`. The mode is passed into the
+    *                                          `onHandleDocObject` plugin callback in `insertStaticDoc` allowing plugins
+    *                                          to optionally handle doc objects based on `mode`.
     */
-   constructor({ docData = void 0, eventbus = void 0 } = {})
+   constructor({ docData = void 0, eventbus = void 0, mode = 'generate' } = {})
    {
       /**
        * TaffyDB instance of docData.
@@ -23,6 +30,8 @@ export class DocDB
       this._docDB = taffy(docData);
 
       this._docID = 0; // TODO determine highest __docId__ from any given docData
+
+      this._mode = mode;
 
       this.setEventbus(eventbus);
    }
@@ -240,6 +249,16 @@ export class DocDB
    }
 
    /**
+    * Gets the current DocDB mode.
+    *
+    * @returns {string}
+    */
+   getMode()
+   {
+      return this._mode;
+   }
+
+   /**
     * Inserts an object, array of objects, or a DocDB into this instance.
     *
     * @param {DocObject|DocObject[]|DocDB}   objectOrDB - A single instance or array of DocObjects or DocDB to merge.
@@ -286,7 +305,8 @@ export class DocDB
       // If this DocDB is associated with an eventbus then invoke `onHandleDocObject`.
       if (this._eventbus)
       {
-         this._eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocObject', void 0, { docObject });
+         this._eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocObject', void 0,
+          { docDB: this, docObject, mode: this._mode });
       }
 
       // Resets the StaticDoc so that all data goes out of scope.
@@ -356,6 +376,8 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:insert:doc:static`, this.insertStaticDoc, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:insert`, this.insert, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:merge`, this.merge, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:mode:get`, this.getMode, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:mode:set`, this.setMode, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:query`, this.query, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:remove`, this.remove, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:reset`, this.reset, this);
@@ -443,6 +465,16 @@ export class DocDB
    setEventbus(eventbus)
    {
       this._eventbus = eventbus;
+   }
+
+   /**
+    * Sets the current DocDB mode.
+    *
+    * @param {string} mode - Defines the operational mode.
+    */
+   setMode(mode)
+   {
+      this._mode = mode;
    }
 }
 
