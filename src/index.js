@@ -8,8 +8,8 @@ import FileUtil            from './utils/FileUtil.js';
 import GenerateDocData     from './utils/GenerateDocData.js';
 import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
 import LintDocLogger       from './utils/LintDocLogger.js';
-import MergeDocData        from './utils/MergeDocData.js';
 import NamingUtil          from './utils/NamingUtil.js';
+import RegenerateDocData   from './utils/RegenerateDocData.js';
 
 /**
  * Adds all common runtime plugins.
@@ -49,24 +49,25 @@ export function onPluginLoad(ev)
       // Local plugins.
       { name: 'tjsdoc-docdb', instance: DocDB },
       { name: 'tjsdoc-docdb-generate', instance: new GenerateDocData() },
-      { name: 'tjsdoc-docdb-merge', instance: new MergeDocData() },
+      { name: 'tjsdoc-docdb-regenerate', instance: new RegenerateDocData() },
       { name: 'tjsdoc-file-util', instance: new FileUtil() },
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
+      { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
       { name: 'tjsdoc-parser-error', instance: ParserError }
    ]);
 }
 
 /**
- * Handles adding plugins before generation that may be needed based on the target project TJSDocConfig.
+ * Handles removing plugins before generation that may not be needed based on the target project TJSDocConfig.
  *
  * @param {PluginEvent} ev - The plugin event.
  */
 export function onPreGenerate(ev)
 {
-   // If enabled add lint doc logger.
-   if (ev.data.config.docLint)
+   // If doc linting is not enabled then remove LintDocLogger
+   if (!ev.data.config.docLint)
    {
-      ev.eventbus.trigger('plugins:add', { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() });
+      ev.eventbus.trigger('plugins:remove', 'tjsdoc-lint-doc-logger');
    }
 }
