@@ -20,13 +20,13 @@ export default class FileUtil
        *
        * @param {object}   fileData - The data to write.
        * @param {string}   fileName - A relative file path and name to `config.destination`.
-       * @param {boolean}  [silent=false] - When true `output: <destPath>` is logged.
+       * @param {boolean}  [silent=false] - When false `output: <destPath>` is logged.
        * @param {encoding} [encoding=utf8] - The encoding type.
        */
       eventbus.on('tjsdoc:system:file:write', (fileData, fileName, silent = false, encoding = 'utf8') =>
       {
          fileData = eventbus.triggerSync('plugins:invoke:sync:event', 'onHandleWriteFile', void 0,
-            { fileData, fileName }).fileData;
+          { fileData, fileName }).fileData;
 
          eventbus.trigger('typhonjs:util:file:write', fileData, fileName, silent, encoding);
       });
@@ -37,10 +37,10 @@ export default class FileUtil
        *
        * @param {string}   destPath - Destination path and file name; the compress format extension will be appended.
        *
-       * @param {boolean}  [addToParent=true] - If a parent archiver exists then add child archive to it and delete local
-       *                                        file.
+       * @param {boolean}  [addToParent=true] - If a parent archiver exists then add child archive to it and delete
+       *                                        local file.
        *
-       * @param {boolean}  [silent=false] - When true `output: <destPath>` is logged.
+       * @param {boolean}  [silent=false] - When false `output: <destPath>` is logged.
        */
       eventbus.on('tjsdoc:system:file:archive:create', (destPath, addToParent = true, silent = false) =>
       {
