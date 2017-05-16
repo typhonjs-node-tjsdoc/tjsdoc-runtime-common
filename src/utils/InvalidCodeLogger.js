@@ -278,21 +278,21 @@ export default class InvalidCodeLogger
 
       if (nonFatalEntries.length > 0)
       {
-         this._eventbus.trigger('log:warn:raw', '\n[33m==================================[0m');
+         this._eventbus.trigger('log:warn:raw', '\n================================================');
          this._eventbus.trigger('log:warn:raw', `[32mInvalidCodeLogger warnings[0m`);
-         this._eventbus.trigger('log:warn:raw', '[33m==================================[0m');
+         this._eventbus.trigger('log:warn:raw', '================================================');
 
          for (const entry of nonFatalEntries) { this._eventbus.trigger('log:warn:raw', entry.output); }
       }
 
       if (fatalEntries.length > 0)
       {
-         this._eventbus.trigger('log:error:raw', '\n[31m==================================[0m');
+         this._eventbus.trigger('log:error:raw', '\n================================================');
          this._eventbus.trigger('log:error:raw', `[1;31mInvalidCodeLogger errors (internal TJSDoc failure)\n[0m`);
          this._eventbus.trigger('log:error:raw',
           `[1;31mPlease report an issue after checking if a similar one already exists:[0m`);
          this._eventbus.trigger('log:error:raw', `[1;31mhttps://github.com/typhonjs-doc/tjsdoc/issues[0m`);
-         this._eventbus.trigger('log:error:raw', '[31m==================================[0m');
+         this._eventbus.trigger('log:error:raw', '================================================');
 
          for (const entry of fatalEntries)
          {
