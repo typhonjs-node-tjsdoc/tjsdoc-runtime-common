@@ -10,9 +10,11 @@ export class DocDB
    /**
     * Initializes the TaffyDB instance with given document data.
     *
-    * @param {DocObject[]} [docData] - DocObject data.
+    * @param {DocObject[]}    [docData] - DocObject data.
+    *
+    * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for this DocDB instance.
     */
-   constructor(docData = void 0)
+   constructor({ docData = void 0, eventbus = void 0 } = {})
    {
       /**
        * TaffyDB instance of docData.
@@ -21,6 +23,8 @@ export class DocDB
       this._docDB = taffy(docData);
 
       this._docID = 0; // TODO determine highest __docId__ from any given docData
+
+      this.setEventbus(eventbus);
    }
 
    /**
@@ -72,23 +76,6 @@ export class DocDB
          Public: this.find(...query, { access: 'public' }).filter((v) => !v.builtinVirtual),
          Protected: this.find(...query, { access: 'protected' }).filter((v) => !v.builtinVirtual),
          Private: this.find(...query, { access: 'private' }).filter((v) => !v.builtinVirtual)
-      };
-   }
-
-   /**
-    * Find all identifiers with grouping by kind.
-    *
-    * @returns {IdentifierKindDocs} found doc objects.
-    */
-   findIdentifierKindDocs()
-   {
-      return {
-         ModuleClass: this.find({ 'kind': 'ModuleClass', 'interface': false }),
-         ModuleFunction: this.find({ kind: 'ModuleFunction' }),
-         ModuleInterface: this.find({ 'kind': 'ModuleClass', 'interface': true }),
-         ModuleVariable: this.find({ category: 'ModuleVariable' }),
-         VirtualExternal: this.find({ kind: 'VirtualExternal' }).filter((v) => !v.builtinVirtual),
-         VirtualTypedef: this.find({ kind: 'VirtualTypedef' })
       };
    }
 
@@ -153,6 +140,58 @@ export class DocDB
       }
 
       return [];
+   }
+
+   /**
+    * Returns all unique dependent file paths from ModuleFile docs which already have been resolved by CoreDocResolver.
+    *
+    * @param {string|Array<string>} filePath - A file path string or array of strings to find associated file docs.
+    *
+    * @param {Array<string>}        [output=[]] - An array to push additional dependent files paths.
+    *
+    * @returns {Array<string>}
+    */
+   findDependentFiles(filePath, output = [])
+   {
+      const docs = this.find({ kind: 'ModuleFile', filePath });
+
+      const dependent = new Set();
+
+      for (const doc of docs)
+      {
+         // Forward dependencies from parent to child docs.
+         if (Array.isArray(doc._custom_dependent_file_paths))
+         {
+            for (const file of doc._custom_dependent_file_paths) { dependent.add(file); }
+         }
+
+         // Backward dependencies from child to parent docs.
+         if (Array.isArray(doc._custom_dependent_file_paths))
+         {
+            for (const file of doc._custom_dependent_file_paths) { dependent.add(file); }
+         }
+      }
+
+      output.push(...dependent);
+
+      return output;
+   }
+
+   /**
+    * Find all identifiers with grouping by kind.
+    *
+    * @returns {IdentifierKindDocs} found doc objects.
+    */
+   findIdentifierKindDocs()
+   {
+      return {
+         ModuleClass: this.find({ 'kind': 'ModuleClass', 'interface': false }),
+         ModuleFunction: this.find({ kind: 'ModuleFunction' }),
+         ModuleInterface: this.find({ 'kind': 'ModuleClass', 'interface': true }),
+         ModuleVariable: this.find({ category: 'ModuleVariable' }),
+         VirtualExternal: this.find({ kind: 'VirtualExternal' }).filter((v) => !v.builtinVirtual),
+         VirtualTypedef: this.find({ kind: 'VirtualTypedef' })
+      };
    }
 
    /**
@@ -309,8 +348,9 @@ export class DocDB
       this._eventbus.on(`${eventPrepend}:data:docdb:current:id:increment:get`, this.getCurrentIDAndIncrement, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find`, this.find, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:access:docs`, this.findAccessDocs, this);
-      this._eventbus.on(`${eventPrepend}:data:docdb:find:identifier:kind:docs`, this.findIdentifierKindDocs, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:by:name`, this.findByName, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:files:dependent`, this.findDependentFiles, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:find:identifier:kind:docs`, this.findIdentifierKindDocs, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find:sorted`, this.findSorted, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:get`, () => this, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:insert:doc:static`, this.insertStaticDoc, this);
@@ -364,6 +404,28 @@ export class DocDB
    }
 
    /**
+    * Removes all distinct doc data entries in this DocDB found in the insertion DocDB instance. After removal all
+    * the given DocDB is inserted.
+    *
+    * @param {DocDB} docDB - The DocDB instance to insert after removing existing doc data by distinct file paths.
+    *
+    * @returns {string[]}  Array of distinct file paths in given DocDB to insert.
+    */
+   removeAndInsertDB(docDB)
+   {
+      // Distinct file paths found in the given DocDB to insert.
+      const filePath = docDB.query().distinct('filePath');
+
+      // Remove old doc data for all distinct file paths.
+      this.remove({ filePath });
+
+      // Insert given DocDB into this instance.
+      this.insert(docDB);
+
+      return filePath;
+   }
+
+   /**
     * Resets the DocDB.
     */
    reset()
@@ -385,7 +447,8 @@ export class DocDB
 }
 
 /**
- * Adds module scoped event binding to create a DocDB instance from docData / DocObject[].
+ * Adds module scoped event binding to create a DocDB instance from DocDBConfig which is an object with entries for
+ * `docData` (DocObject[]) and / or `eventbus` assigning it to the new DocDB instance created.
  *
  * @param {PluginEvent} ev - The plugin event.
  */
@@ -393,5 +456,5 @@ export function onPluginLoad(ev)
 {
    const eventbus = ev.eventbus;
 
-   eventbus.on('tjsdoc:system:docdb:create', (docData) => new DocDB(docData));
+   eventbus.on('tjsdoc:system:docdb:create', (docDBConfig) => new DocDB(docDBConfig));
 }
