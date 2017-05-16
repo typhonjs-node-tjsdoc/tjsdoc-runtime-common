@@ -1,7 +1,15 @@
 import path from 'path';
 
 /**
- * Lint output logger. Detects parameter mismatches between code and documentation and logs the results.
+ * Documentation lint logger. Detects parameter mismatches between function and class methods and documentation storing
+ * the results for later logging.
+ *
+ * Since AST node data for each doc object is required for validation this must occur in `onHandleDocObject` which is
+ * invoked in `DocDB->insertStaticDoc` before any AST node is removed. Logging is only enabled if the DocDB mode is set
+ * to `generate` which is the case for a full generation of docs. For instance incremental regeneration via
+ * `RegenerateDocData` sets the mode to `regenerate` and lint doc logging does not occur.
+ *
+ * If TJSDocConfig `docLint` is set to false this plugin is not enabled.
  */
 export default class LintDocLogger
 {
@@ -40,9 +48,9 @@ export default class LintDocLogger
    {
       if (this._results.length > 0)
       {
-         this._eventbus.trigger('log:warn:raw', '\n[33m==================================[0m');
+         this._eventbus.trigger('log:warn:raw', '\n================================================');
          this._eventbus.trigger('log:warn:raw', `[33mLintDocLogger warnings:[0m`);
-         this._eventbus.trigger('log:warn:raw', '[33m==================================[0m');
+         this._eventbus.trigger('log:warn:raw', '================================================');
 
          for (const message of this._results)
          {
@@ -100,9 +108,15 @@ export default class LintDocLogger
    onHandleDocObject(ev)
    {
       const doc = ev.data.docObject;
+      const mode = ev.data.mode;
 
-      // Only handle class method and module function docs.
-      if (doc.undocument || !doc.node || (doc.kind !== 'ClassMethod' && doc.kind !== 'ModuleFunction')) { return; }
+      // Only handle class method and module function docs that have an AST node and when the DocDB `mode` is
+      // `generate`.
+      if (!mode || mode !== 'generate' || doc.undocument || !doc.node ||
+       (doc.kind !== 'ClassMethod' && doc.kind !== 'ModuleFunction'))
+      {
+         return;
+      }
 
       // Get AST / parser specific parsing of the node returning any method params.
       const codeParams = this._eventbus.triggerSync('tjsdoc:system:ast:method:params:from:node:get', doc.node);
@@ -139,11 +153,11 @@ export default class LintDocLogger
    }
 
    /**
-    * Stores TJSDocConfig
+    * Stores TJSDocConfig.
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onStart(ev)
+   onPreGenerate(ev)
    {
       /**
        * The target project TJSDoc config.
