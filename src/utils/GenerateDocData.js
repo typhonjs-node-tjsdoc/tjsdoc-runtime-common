@@ -83,16 +83,18 @@ export default class GenerateDocData
    /**
     * Generates doc data from the given source code.
     *
-    * @param {string}   code - Source code to parse.
+    * @param {string}         code - Source code to parse.
     *
-    * @param {DocDB}    [docDB] - The target DocDB instance; or one will be created.
+    * @param {DocDB}          [docDB] - The target DocDB instance; or one will be created.
     *
-    * @param {string}   [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
-    *                                           with the default being to throw any errors encountered.
+    * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for any created DocDB instance.
+    *
+    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    *                                                 with the default being to throw any errors encountered.
     *
     * @returns {*}
     */
-   generateCodeDocData({ code = void 0, docDB = void 0, handleError = 'throw' } = {})
+   generateCodeDocData({ code = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw' } = {})
    {
       if (typeof code !== 'string' && typeof code !== 'object')
       {
@@ -101,7 +103,8 @@ export default class GenerateDocData
 
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
 
-      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create');
+      // When creating a new DocDB when one is not provided optionally also attach an eventbus.
+      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create', { eventbus });
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
@@ -113,23 +116,26 @@ export default class GenerateDocData
    /**
     * Generates doc data from a file path and supporting data.
     *
-    * @param {string}   filePath - Doc data is generated from this file path.
+    * @param {string}         filePath - Doc data is generated from this file path.
     *
-    * @param {DocDB}    [docDB] - The target DocDB instance; or one will be created.
+    * @param {DocDB}          [docDB] - The target DocDB instance; or one will be created.
     *
-    * @param {string}   [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for any created DocDB instance.
+    *
+    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
     *                                                    with the default being to throw any errors encountered.
     *
-    * @param {boolean}  [log=true] - If true a log statement is emitted.
+    * @param {boolean}        [silent=false] - If true a log statement is not emitted.
     *
     * @returns {*}
     */
-   generateFileDocData({ filePath = void 0, docDB = void 0, handleError = 'throw', log = true } = {})
+   generateFileDocData(
+    { filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw', silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
 
-      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create');
+      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create', { eventbus });
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
@@ -154,7 +160,7 @@ export default class GenerateDocData
          if (relativeFilePath.match(reg)) { return void 0; }
       }
 
-      if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
+      if (!silent) { this._eventbus.trigger('log:info:raw', `tjsdoc-docdb-generate - parse: ${filePath}`); }
 
       this._resetAndTraverse(this._docGenerator, docDB, handleError, filePath);
 
@@ -164,23 +170,26 @@ export default class GenerateDocData
    /**
     * Generates doc data from a file path and supporting data.
     *
-    * @param {string}   filePath - Doc data is generated from this file path.
+    * @param {string}         filePath - Doc data is generated from this file path.
     *
-    * @param {DocDB}    [docDB] - The target DocDB instance; or one will be created.
+    * @param {DocDB}          [docDB] - The target DocDB instance; or one will be created.
     *
-    * @param {string}   [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
-    *                                                    with the default being to throw any errors encountered.
+    * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for any created DocDB instance.
     *
-    * @param {boolean}  [log=true] - If true a log statement is emitted.
+    * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
+    *                                                 with the default being to throw any errors encountered.
+    *
+    * @param {boolean}        [silent=false] - If true a log statement is not emitted.
     *
     * @returns {*}
     */
-   generateTestDocData({ filePath = void 0, docDB = void 0, handleError = 'throw', log = true } = {})
+   generateTestDocData(
+    { filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw', silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
 
-      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create');
+      docDB = docDB ? docDB : this._eventbus.triggerSync('tjsdoc:system:docdb:create', { eventbus });
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
@@ -204,7 +213,7 @@ export default class GenerateDocData
          if (relativeFilePath.match(reg)) { return void 0; }
       }
 
-      if (log) { this._eventbus.trigger('log:info:raw', `parse: ${filePath}`); }
+      if (!silent) { this._eventbus.trigger('log:info:raw', `tjsdoc-docdb-generate - parse: ${filePath}`); }
 
       this._resetAndTraverse(this._testDocGenerator, docDB, handleError, filePath);
 
