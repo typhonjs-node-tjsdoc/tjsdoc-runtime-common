@@ -292,15 +292,25 @@ export class DocDB
     *
     * @param {StaticDoc}   staticDoc - The static doc generator to retrieve a DocObject to insert.
     *
+    * @param {function}    [docFilter] - An optional function invoked with the static doc before inserting into the
+    *                                    given DocDB.
+    *
     * @param {boolean}     [reset=true] - Resets the StaticDoc removing all internal data references so that it can
     *                                     go out of scope.
-    * @returns {TaffyDB}
+    * @returns {TaffyDB|undefined}
     * @private
     */
-   insertStaticDoc(staticDoc, reset = true)
+   insertStaticDoc(staticDoc, docFilter = void 0, reset = true)
    {
       // Retrieve the docObject data.
       const docObject = staticDoc.value;
+
+      if (typeof docFilter === 'function')
+      {
+         const addDoc = docFilter(docObject) || true;
+
+         if (!addDoc) { return; }
+      }
 
       // If this DocDB is associated with an eventbus then invoke `onHandleDocObject`.
       if (this._eventbus)
