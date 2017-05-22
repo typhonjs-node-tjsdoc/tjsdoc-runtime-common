@@ -25,6 +25,8 @@
  *
  * {string}       [handleError='throw'] - Defaults to the 'throw'; no other setting is currently supported.
  *
+ * {function}     [docFilter] - An optional function invoked with the static doc before inserting into the given DocDB.
+ *
  * {boolean}      [resolve=true] - By default after regenerating and merging the core doc resolver is triggered to
  *                                 resolve the new docs.
  *
@@ -87,6 +89,9 @@ export default class RegenerateDocData
     *
     * @param {string}       [handleError='throw'] - Defaults to the 'throw'; no other setting is currently supported.
     *
+    * @param {function}     [docFilter] - An optional function invoked with the static doc before inserting into the
+    *                                     given DocDB.
+    *
     * @param {boolean}      [resolve=true] - By default after regenerating and merging the core doc resolver is
     *                                        triggered to resolve the new docs.
     *
@@ -96,7 +101,7 @@ export default class RegenerateDocData
     * @private
     */
    _regenerateDocData(event, { dependent = true, docDB = this._mainDocDB, eventbus = this._eventbus, filePath,
-    handleError = 'throw', resolve = true, silent = false } = {})
+    handleError = 'throw', docFilter = void 0, resolve = true, silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
@@ -104,7 +109,7 @@ export default class RegenerateDocData
       // Create a DocDB to store regenerated docs and set mode to `regenerate`.
       const regenDocDB = this._eventbus.triggerSync('tjsdoc:system:docdb:create', { eventbus, mode: 'regenerate' });
 
-      const generateOptions = { docDB: regenDocDB, eventbus, filePath, handleError, silent };
+      const generateOptions = { docDB: regenDocDB, eventbus, filePath, handleError, silent, docFilter };
 
       generateOptions.docDB = this._eventbus.triggerSync(event, generateOptions);
 
@@ -160,6 +165,9 @@ export default class RegenerateDocData
     * @property {string}         [config.handleError='throw'] - Defaults to the 'throw'; no other setting is currently
     *                                                           supported.
     *
+    * @property {function}       [docFilter] - An optional function invoked with the static doc before inserting into
+    *                                          the given DocDB.
+    *
     * @property {boolean}        [config.resolve=true] - By default after regenerating and merging the core doc resolver
     *                                                    is triggered to resolve the new docs.
     *
@@ -192,6 +200,9 @@ export default class RegenerateDocData
     *
     * @property {string}         [config.handleError='throw'] - Defaults to the 'throw'; no other setting is currently
     *                                                           supported.
+    *
+    * @property {function}       [docFilter] - An optional function invoked with the static doc before inserting into
+    *                                          the given DocDB.
     *
     * @property {boolean}        [config.resolve=true] - By default after regenerating and merging the core doc resolver
     *                                                    is triggered to resolve the new docs.

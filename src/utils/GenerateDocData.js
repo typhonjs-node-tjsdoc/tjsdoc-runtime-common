@@ -92,9 +92,12 @@ export default class GenerateDocData
     * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
     *                                                 with the default being to throw any errors encountered.
     *
+    * @param {function}       [docFilter] - An optional function invoked with the static doc before inserting into the
+    *                                       given DocDB.
     * @returns {*}
     */
-   generateCodeDocData({ code = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw' } = {})
+   generateCodeDocData({ code = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw',
+    docFilter = void 0 } = {})
    {
       if (typeof code !== 'string' && typeof code !== 'object')
       {
@@ -108,7 +111,7 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      this._resetAndTraverse(this._docGenerator, docDB, handleError, void 0, code);
+      this._resetAndTraverse(this._docGenerator, docDB, handleError, void 0, code, docFilter);
 
       return docDB;
    }
@@ -125,12 +128,15 @@ export default class GenerateDocData
     * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
     *                                                    with the default being to throw any errors encountered.
     *
+    * @param {function}       [docFilter] - An optional function invoked with the static doc before inserting into the
+    *                                       given DocDB.
+    *
     * @param {boolean}        [silent=false] - If true a log statement is not emitted.
     *
     * @returns {*}
     */
-   generateFileDocData(
-    { filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw', silent = false } = {})
+   generateFileDocData({ filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw',
+    docFilter = void 0, silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
@@ -162,7 +168,7 @@ export default class GenerateDocData
 
       if (!silent) { this._eventbus.trigger('log:info:raw', `tjsdoc-docdb-generate - parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._docGenerator, docDB, handleError, filePath);
+      this._resetAndTraverse(this._docGenerator, docDB, handleError, filePath, void 0, docFilter);
 
       return docDB;
    }
@@ -179,12 +185,15 @@ export default class GenerateDocData
     * @param {string}         [handleError='throw'] - Determines how to handle errors. Options are `log` and `throw`
     *                                                 with the default being to throw any errors encountered.
     *
+    * @param {function}       [docFilter] - An optional function invoked with the static doc before inserting into the
+    *                                       given DocDB.
+    *
     * @param {boolean}        [silent=false] - If true a log statement is not emitted.
     *
     * @returns {*}
     */
-   generateTestDocData(
-    { filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw', silent = false } = {})
+   generateTestDocData({ filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw',
+    docFilter = void 0, silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }
       if (typeof handleError !== 'string') { throw new TypeError(`'handleError' is not a 'string'.`); }
@@ -215,7 +224,7 @@ export default class GenerateDocData
 
       if (!silent) { this._eventbus.trigger('log:info:raw', `tjsdoc-docdb-generate - parse: ${filePath}`); }
 
-      this._resetAndTraverse(this._testDocGenerator, docDB, handleError, filePath);
+      this._resetAndTraverse(this._testDocGenerator, docDB, handleError, filePath, void 0, docFilter);
 
       return docDB;
    }
@@ -233,10 +242,13 @@ export default class GenerateDocData
     *
     * @param {string}                        [code] - Target in memory code.
     *
+    * @param {function}                      [docFilter] - An optional function invoked with the static doc before
+    *                                                      inserting into the given DocDB.
+    *
     * @returns {*}
     * @private
     */
-   _resetAndTraverse(docGenerator, docDB, handleError, filePath, code)
+   _resetAndTraverse(docGenerator, docDB, handleError, filePath, code, docFilter)
    {
       let ast;
       let actualCode;
@@ -297,6 +309,7 @@ export default class GenerateDocData
 
       this._pathResolver.setPathData(this._rootPath, filePath, this._packageName, this._mainFilePath);
 
-      docGenerator.resetAndTraverse(ast, docDB, this._pathResolver, this._eventbus, handleError, actualCode);
+      docGenerator.resetAndTraverse({ ast, docDB, pathResolver: this._pathResolver, eventbus: this._eventbus,
+       handleError, docFilter, code: actualCode });
    }
 }
