@@ -219,6 +219,106 @@ export class DocDB
    }
 
    /**
+    * Gets the current source documentation coverage data for this DocDB.
+    *
+    * @param {boolean}  [includeFiles=false] - If true then include documentation coverage for each file.
+    *
+    * @returns {DocDBCoverage}
+    */
+   getSourceCoverage({ includeFiles = false } = {})
+   {
+      const docs = this.find(
+      {
+         kind:
+         [
+            'ClassMember',
+            'ClassMethod',
+            'ClassProperty',
+            'ModuleAssignment',
+            'ModuleClass',
+            'ModuleFunction',
+            'ModuleVariable'
+         ]
+      });
+
+      let actualCount = 0;
+      const expectedCount = docs.length;
+      const files = {};
+
+      if (includeFiles)
+      {
+         for (const doc of docs)
+         {
+            const filePath = doc.filePath;
+
+            if (!files[filePath]) { files[filePath] = { expectedCount: 0, actualCount: 0, undocumentedLines: [] }; }
+
+            files[filePath].expectedCount++;
+
+            if (doc.undocument)
+            {
+               files[filePath].undocumentedLines.push(doc.lineNumber);
+            }
+            else
+            {
+               actualCount++;
+               files[filePath].actualCount++;
+            }
+         }
+
+         for (const filePath in files)
+         {
+            files[filePath] = Object.assign(files[filePath], s_CALC_COVERAGE(files[filePath].actualCount,
+             files[filePath].expectedCount));
+         }
+      }
+      else
+      {
+         for (const doc of docs)
+         {
+            if (!doc.undocument) { actualCount++; }
+         }
+      }
+
+      return Object.assign({ files }, s_CALC_COVERAGE(actualCount, expectedCount));
+   }
+
+   /**
+    * Logs current coverage status by triggering 'log:info:raw' messages on any assigned eventbus.
+    *
+    * @param {TyphonEvents}   [eventbus=this._eventbus] - An optional eventbus to post log events to.
+    *
+    * @param {boolean}        [includeFiles=false] - If true then include documentation coverage for each file.
+    */
+   logSourceCoverage({ eventbus = this._eventbus, includeFiles = false } = {})
+   {
+      const coverage = this.getSourceCoverage({ includeFiles });
+
+      if (eventbus)
+      {
+         eventbus.trigger('log:info:raw', '================================================');
+
+         if (includeFiles)
+         {
+            for (const filePath in coverage.files)
+            {
+               const fileCoverage = coverage.files[filePath];
+
+               eventbus.trigger('log:info:raw', `${fileCoverage.ansiColor}${filePath}: ${fileCoverage.text} (${
+                fileCoverage.actualCount}/${fileCoverage.expectedCount})[0m`);
+            }
+
+            eventbus.trigger('log:info:raw', '');
+         }
+
+         eventbus.trigger('log:info:raw', `${coverage.ansiColor}Documentation coverage: ${coverage.text} (${
+          coverage.actualCount}/${coverage.expectedCount})[0m`);
+
+         eventbus.trigger('log:info:raw', '================================================');
+      }
+   }
+
+   /**
     * Returns the current doc ID.
     *
     * @returns {number}
@@ -374,6 +474,8 @@ export class DocDB
       // If `eventPrepend` is defined then it is prepended before all event bindings.
       if (typeof ev.pluginOptions.eventPrepend === 'string') { eventPrepend = `${ev.pluginOptions.eventPrepend}`; }
 
+      this._eventbus.on(`${eventPrepend}:data:docdb:coverage:source:get`, this.getSourceCoverage, this);
+      this._eventbus.on(`${eventPrepend}:data:docdb:coverage:source:log`, this.logSourceCoverage, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:current:id:get`, this.getCurrentID, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:current:id:increment:get`, this.getCurrentIDAndIncrement, this);
       this._eventbus.on(`${eventPrepend}:data:docdb:find`, this.find, this);
@@ -499,4 +601,37 @@ export function onPluginLoad(ev)
    const eventbus = ev.eventbus;
 
    eventbus.on('tjsdoc:system:docdb:create', (docDBConfig) => new DocDB(docDBConfig));
+}
+
+// Module private ---------------------------------------------------------------------------------------------------
+
+/**
+ * Calculates coverage data based on actual and expected counts.
+ *
+ * @param {number} actualCount - Actual covered doc objects.
+ *
+ * @param {number} expectedCount - Expected covered doc objects.
+ *
+ * @returns {{text: string, percent: number, expectedCount: number, actualCount: number, ansiColor: string, htmlColor: string}}
+ */
+function s_CALC_COVERAGE(actualCount, expectedCount)
+{
+   const percent = (expectedCount === 0 ? 0 : Math.floor(10000 * actualCount / expectedCount) / 100);
+
+   let ansiColor = '[32m'; // green
+   let htmlColor = '#4fc921';
+
+   if (percent < 90) { ansiColor = '[33m'; htmlColor = '#dab226'; } // yellow
+   if (percent < 50) { ansiColor = '[31m'; htmlColor = '#db654f'; } // red
+   if (percent < 25) { ansiColor = '[1;31m'; htmlColor = '#ff654f'; } // light red
+
+   // Return an object hash of coverage data.
+   return {
+      text: `${percent}%`,
+      percent,
+      expectedCount,
+      actualCount,
+      ansiColor,
+      htmlColor
+   };
 }
