@@ -20,7 +20,7 @@ export default class GenerateDocData
       this._eventbus = ev.eventbus;
 
       this._eventbus.on('tjsdoc:system:generate:code:doc:data', this.generateCodeDocData, this);
-      this._eventbus.on('tjsdoc:system:generate:file:doc:data', this.generateFileDocData, this);
+      this._eventbus.on('tjsdoc:system:generate:source:doc:data', this.generateSourceDocData, this);
       this._eventbus.on('tjsdoc:system:generate:test:doc:data', this.generateTestDocData, this);
 
       this._eventbus.on('tjsdoc:system:path:resolver:create',
@@ -117,7 +117,7 @@ export default class GenerateDocData
    }
 
    /**
-    * Generates doc data from a file path and supporting data.
+    * Generates doc data from a source file path and supporting data.
     *
     * @param {string}         filePath - Doc data is generated from this file path.
     *
@@ -135,7 +135,7 @@ export default class GenerateDocData
     *
     * @returns {*}
     */
-   generateFileDocData({ filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw',
+   generateSourceDocData({ filePath = void 0, docDB = void 0, eventbus = void 0, handleError = 'throw',
     docFilter = void 0, silent = false } = {})
    {
       if (typeof filePath !== 'string') { throw new TypeError(`'filePath' is not a 'string'.`); }

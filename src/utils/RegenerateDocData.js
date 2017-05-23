@@ -177,7 +177,7 @@ export default class RegenerateDocData
     */
    regenerateSourceDocData(config)
    {
-      return this._regenerateDocData('tjsdoc:system:generate:file:doc:data', config);
+      return this._regenerateDocData('tjsdoc:system:generate:source:doc:data', config);
    }
 
    /**
