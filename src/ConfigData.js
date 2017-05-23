@@ -69,6 +69,8 @@ export default class ConfigData
 
          'docCoverage': true,
 
+         'docCoverageFiles': false,
+
          'docLint': true,
 
          'emptyDestination': false,
@@ -184,6 +186,8 @@ export default class ConfigData
          'destination': { required: false, test: 'entry|array', type: 'string' },
 
          'docCoverage': { required: false, test: 'entry', type: 'boolean' },
+
+         'docCoverageFiles': { required: false, test: 'entry', type: 'boolean' },
 
          'docLint': { required: false, test: 'entry', type: 'boolean' },
 
