@@ -221,25 +221,16 @@ export class DocDB
    /**
     * Gets the current source documentation coverage data for this DocDB.
     *
-    * @param {boolean}  [includeFiles=false] - If true then include documentation coverage for each file.
+    * @param {string|string[]}   [filePath] - An optional string or array of string to limit data collection.
+    *
+    * @param {boolean}           [includeFiles=false] - If true then include documentation coverage for each file.
     *
     * @returns {DocDBCoverage}
     */
-   getSourceCoverage({ includeFiles = false } = {})
+   getSourceCoverage({ filePath = void 0, includeFiles = false } = {})
    {
-      const docs = this.find(
-      {
-         kind:
-         [
-            'ClassMember',
-            'ClassMethod',
-            'ClassProperty',
-            'ModuleAssignment',
-            'ModuleClass',
-            'ModuleFunction',
-            'ModuleVariable'
-         ]
-      });
+      const docs = filePath ? this.find({ kind: s_SOURCE_COVERAGE_KIND, filePath }) :
+       this.find({ kind: s_SOURCE_COVERAGE_KIND });
 
       let actualCount = 0;
       const expectedCount = docs.length;
@@ -286,13 +277,15 @@ export class DocDB
    /**
     * Logs current coverage status by triggering 'log:info:raw' messages on any assigned eventbus.
     *
-    * @param {TyphonEvents}   [eventbus=this._eventbus] - An optional eventbus to post log events to.
+    * @param {TyphonEvents}      [eventbus=this._eventbus] - An optional eventbus to post log events to.
     *
-    * @param {boolean}        [includeFiles=false] - If true then include documentation coverage for each file.
+    * @param {string|string[]}   [filePath] - An optional string or array of string file paths to log.
+    *
+    * @param {boolean}           [includeFiles=false] - If true then include documentation coverage for each file.
     */
-   logSourceCoverage({ eventbus = this._eventbus, includeFiles = false } = {})
+   logSourceCoverage({ eventbus = this._eventbus, filePath = void 0, includeFiles = false } = {})
    {
-      const coverage = this.getSourceCoverage({ includeFiles });
+      const coverage = this.getSourceCoverage({ filePath, includeFiles });
 
       if (eventbus)
       {
@@ -604,6 +597,21 @@ export function onPluginLoad(ev)
 }
 
 // Module private ---------------------------------------------------------------------------------------------------
+
+/**
+ * Defines the doc object kinds which contribute to source documentation coverage.
+ * @type {string[]}
+ */
+const s_SOURCE_COVERAGE_KIND =
+[
+   'ClassMember',
+   'ClassMethod',
+   'ClassProperty',
+   'ModuleAssignment',
+   'ModuleClass',
+   'ModuleFunction',
+   'ModuleVariable'
+];
 
 /**
  * Calculates coverage data based on actual and expected counts.
