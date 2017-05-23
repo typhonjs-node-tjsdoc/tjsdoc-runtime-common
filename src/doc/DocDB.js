@@ -257,10 +257,13 @@ export class DocDB
             }
          }
 
+         // Assign coverage for each file and sort undocumented lines numerically.
          for (const filePath in files)
          {
             files[filePath] = Object.assign(files[filePath], s_CALC_COVERAGE(files[filePath].actualCount,
              files[filePath].expectedCount));
+
+            files[filePath].undocumentedLines.sort((a, b) => a - b);
          }
       }
       else
@@ -271,6 +274,7 @@ export class DocDB
          }
       }
 
+      // Return object hash with files and total coverage.
       return Object.assign({ files }, s_CALC_COVERAGE(actualCount, expectedCount));
    }
 
@@ -282,8 +286,10 @@ export class DocDB
     * @param {string|string[]}   [filePath] - An optional string or array of string file paths to log.
     *
     * @param {boolean}           [includeFiles=false] - If true then include documentation coverage for each file.
+    *
+    * @param {boolean}           [includeLines=false] - If true then include undocumented lines for each file.
     */
-   logSourceCoverage({ eventbus = this._eventbus, filePath = void 0, includeFiles = false } = {})
+   logSourceCoverage({ eventbus = this._eventbus, filePath = void 0, includeFiles = false, includeLines = false } = {})
    {
       const coverage = this.getSourceCoverage({ filePath, includeFiles });
 
@@ -293,12 +299,15 @@ export class DocDB
 
          if (includeFiles)
          {
-            for (const filePath in coverage.files)
+            for (const path of Object.keys(coverage.files).sort((a, b) => a.localeCompare(b)))
             {
-               const fileCoverage = coverage.files[filePath];
+               const fileCoverage = coverage.files[path];
 
-               eventbus.trigger('log:info:raw', `${fileCoverage.ansiColor}${filePath}: ${fileCoverage.text} (${
-                fileCoverage.actualCount}/${fileCoverage.expectedCount})[0m`);
+               const undocumentedLines = includeLines && fileCoverage.undocumentedLines.length > 0 ?
+                ` - undocumented lines: ${JSON.stringify(fileCoverage.undocumentedLines)}` : '';
+
+               eventbus.trigger('log:info:raw', `${fileCoverage.ansiColor}${path}: ${fileCoverage.text} (${
+                fileCoverage.actualCount}/${fileCoverage.expectedCount})${undocumentedLines}[0m`);
             }
 
             eventbus.trigger('log:info:raw', '');
