@@ -14,7 +14,7 @@ export class DocDB
     *
     * @param {TyphonEvents}   [eventbus] - An eventbus instance to set for this DocDB instance.
     *
-    * @param {string}      [mode='generate'] - Defines the operational mode. By default this is `generate` which
+    * @param {string}         [mode='generate'] - Defines the operational mode. By default this is `generate` which
     *                                          normally occurs during initial full generation of all docs, but it is
     *                                          possible to regenerate docs for a subset of files incrementally and in
     *                                          this case mode is set to `regenerate`. The mode is passed into the
@@ -633,18 +633,19 @@ const s_SOURCE_COVERAGE_KIND =
  */
 function s_CALC_COVERAGE(actualCount, expectedCount)
 {
-   const percent = (expectedCount === 0 ? 0 : Math.floor(10000 * actualCount / expectedCount) / 100);
+   const text = (expectedCount === 0 ? `0%` : `${Math.floor(100 * actualCount / expectedCount)}%`);
+   const percent = (expectedCount === 0 ? 0 : actualCount / expectedCount);
 
    let ansiColor = '[32m'; // green
    let htmlColor = '#4fc921';
 
-   if (percent < 90) { ansiColor = '[33m'; htmlColor = '#dab226'; } // yellow
-   if (percent < 50) { ansiColor = '[31m'; htmlColor = '#db654f'; } // red
-   if (percent < 25) { ansiColor = '[1;31m'; htmlColor = '#ff654f'; } // light red
+   if (percent < 0.9) { ansiColor = '[33m'; htmlColor = '#dab226'; } // yellow
+   if (percent < 0.5) { ansiColor = '[31m'; htmlColor = '#db654f'; } // red
+   if (percent < 0.25) { ansiColor = '[1;31m'; htmlColor = '#ff654f'; } // light red
 
    // Return an object hash of coverage data.
    return {
-      text: `${percent}%`,
+      text,
       percent,
       expectedCount,
       actualCount,
