@@ -263,7 +263,7 @@ export class DocDB
             files[filePath] = Object.assign(files[filePath], s_CALC_COVERAGE(files[filePath].actualCount,
              files[filePath].expectedCount));
 
-            files[filePath].undocumentedLines.sort((a, b) => a - b);
+            files[filePath].undocumentedLines.sort(s_SORT_ARRAY_NUMERIC);
          }
       }
       else
@@ -606,6 +606,14 @@ export function onPluginLoad(ev)
 }
 
 // Module private ---------------------------------------------------------------------------------------------------
+
+/**
+ * Provides an Array sort function for numeric sorting.
+ * @param {number}   a - A number.
+ * @param {number}   b - A number.
+ * @returns {number}
+ */
+const s_SORT_ARRAY_NUMERIC = (a, b) => a - b;
 
 /**
  * Defines the doc object kinds which contribute to source documentation coverage.
