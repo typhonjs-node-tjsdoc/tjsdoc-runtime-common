@@ -4,6 +4,8 @@ import * as DocDB          from './doc/DocDB.js';
 
 import * as ParserError    from './parser/ParserError.js';
 
+import PublisherRuntime    from './publisher/PublisherRuntime.js';
+
 import FileUtil            from './utils/FileUtil.js';
 import GenerateDocData     from './utils/GenerateDocData.js';
 import InvalidCodeLogger   from './utils/InvalidCodeLogger.js';
@@ -20,7 +22,11 @@ export function onPluginLoad(ev)
 {
    const eventbus = ev.eventbus;
 
+   // Any resolver data overrides from parent runtime.
    const resolverDataOverride = ev.pluginOptions.resolverData || {};
+
+   // Retrieve any publisher resolver data overrides.
+   const pubResolverDataOverride = eventbus.triggerSync('tjsdoc:data:publisher:config:resolver:get') || {};
 
    // Instances are being loaded into the plugin manager so auto log filtering needs an explicit filter.
    eventbus.trigger('log:filter:add', {
@@ -42,7 +48,7 @@ export function onPluginLoad(ev)
          {
             eventPrepend: 'tjsdoc:system',
             logEvent: 'log:info:raw',
-            resolverData: ConfigData.createResolverData(ev.eventbus, resolverDataOverride)
+            resolverData: ConfigData.createResolverData(ev.eventbus, resolverDataOverride, pubResolverDataOverride)
          }
       },
 
@@ -54,7 +60,8 @@ export function onPluginLoad(ev)
       { name: 'tjsdoc-invalid-code-logger', instance: new InvalidCodeLogger() },
       { name: 'tjsdoc-lint-doc-logger', instance: new LintDocLogger() },
       { name: 'tjsdoc-naming-util', instance: new NamingUtil() },
-      { name: 'tjsdoc-parser-error', instance: ParserError }
+      { name: 'tjsdoc-parser-error', instance: ParserError },
+      { name: 'tjsdoc-runtime-publisher', instance: new PublisherRuntime() }
    ]);
 }
 
