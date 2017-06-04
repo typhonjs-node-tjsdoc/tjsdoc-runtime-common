@@ -12,32 +12,37 @@ export default class ConfigData
     *
     * @param {EventProxy}           eventbus - An eventbus proxy.
     *
-    * @param {ConfigResolverData}   mixin - An object structured as ConfigResolverData.
+    * @param {ConfigResolverData}   [mixins] - An object structured as ConfigResolverData.
     *
     * @returns {ConfigResolverData}
     */
-   static createResolverData(eventbus, mixin = {})
+   static createResolverData(eventbus, ...mixins)
    {
-      if (typeof mixin !== 'object') { throw new TypeError(`'mixin' is not an 'object'.`); }
-
-      const defaultValues = ConfigData.defaultValues(eventbus);
+      const defaultValues = ConfigData.defaultValues();
       const preValidate = ConfigData.preValidate(eventbus);
       const postValidate = ConfigData.postValidate(eventbus);
       const upgradeMergeList = ConfigData.upgradeMergeList();
 
-      return {
-         defaultValues: typeof mixin.defaultValues === 'object' ? Object.assign(defaultValues, mixin.defaultValues) :
-          defaultValues,
+      for (const mixin of mixins)
+      {
+         if (typeof mixin !== 'object') { throw new TypeError(`'mixin' is not an 'object'.`); }
 
-         preValidate: typeof mixin.preValidate === 'object' ? Object.assign(preValidate, mixin.preValidate) :
-          preValidate,
+         if (typeof mixin.defaultValues === 'object') { Object.assign(defaultValues, mixin.defaultValues); }
 
-         postValidate: typeof mixin.postValidate === 'object' ? Object.assign(postValidate, mixin.postValidate) :
-          postValidate,
+         if (typeof mixin.preValidate === 'object') { Object.assign(preValidate, mixin.preValidate); }
 
-         upgradeMergeList: Array.isArray(mixin.upgradeMergeList) ? [...upgradeMergeList, ...mixin.upgradeMergeList] :
-          upgradeMergeList
-      };
+         if (typeof mixin.postValidate === 'object') { Object.assign(postValidate, mixin.postValidate); }
+
+         if (Array.isArray(mixin.upgradeMergeList))
+         {
+            for (const mergeEntry of mixin.upgradeMergeList)
+            {
+               if (!upgradeMergeList.includes(mergeEntry)) { upgradeMergeList.push(mergeEntry); }
+            }
+         }
+      }
+
+      return { createMissing: false, defaultValues, preValidate, postValidate, upgradeMergeList };
    }
 
    /**
@@ -93,7 +98,11 @@ export default class ConfigData
 
          'plugins': [],
 
+         'publisherOptions': {},
+
          'removeCommonPath': false,
+
+         'runtimeOptions': {},
 
          'separateDataArchives': false,
 
@@ -218,15 +227,15 @@ export default class ConfigData
          'publisher': { required: false, test: 'entry', expected:
           (entry) => (typeof entry === 'string' || typeof entry === 'object') && entry !== null },
 
-         'scripts': { required: false, test: 'array', type: 'string' },
+         'publisherOptions': { required: false, test: 'entry', type: 'object' },
+
+         'runtimeOptions': { required: false, test: 'entry', type: 'object' },
 
          'separateDataArchives': { required: false, test: 'entry', type: 'boolean' },
 
          'source': { required: false, test: 'entry|array', type: 'string' },
 
          'sourceFiles': { required: false, test: 'array', type: 'string' },
-
-         'styles': { required: false, test: 'array', type: 'string' },
 
          'test': { required: false, test: 'entry', expected: (entry) => entry !== null && typeof entry === 'object' },
 
@@ -260,10 +269,8 @@ export default class ConfigData
          'includes',
          'pathExtensions',
          'plugins',
-         'scripts',
          'source',
-         'sourceFiles',
-         'styles'
+         'sourceFiles'
       ];
    }
 }
