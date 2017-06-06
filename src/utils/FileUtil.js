@@ -4,6 +4,20 @@
 export default class FileUtil
 {
    /**
+    * Store the TJSDocConfig object and other relevant data for generating doc data.
+    *
+    * @param {PluginEvent} ev - The plugin event.
+    */
+   onPreGenerate(ev)
+   {
+      /**
+       * @type {TJSDocConfig}
+       * @private
+       */
+      this._mainConfig = ev.data.mainConfig;
+   }
+
+   /**
     * Wires up FileUtil to the plugin eventbus.
     *
     * @param {PluginEvent} ev - The plugin event.
@@ -44,10 +58,8 @@ export default class FileUtil
        */
       eventbus.on('tjsdoc:system:file:archive:create', (destPath, addToParent = true, silent = false) =>
       {
-         const config = eventbus.triggerSync('tjsdoc:data:config:get');
-
          // Allow config parameter `separateDataArchives` to override addToParent.
-         addToParent = addToParent && !config.separateDataArchives;
+         addToParent = addToParent && !this._mainConfig.separateDataArchives;
 
          eventbus.trigger('typhonjs:util:file:archive:create', destPath, addToParent, silent);
       });

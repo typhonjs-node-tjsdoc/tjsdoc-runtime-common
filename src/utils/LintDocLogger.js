@@ -96,7 +96,7 @@ export default class LintDocLogger
     */
    onComplete(ev)
    {
-      if (ev.data.config.docLint) { this.logWarnings(); }
+      if (ev.data.mainConfig.docLint) { this.logWarnings(); }
    }
 
    /**
@@ -125,7 +125,7 @@ export default class LintDocLogger
 
       if (this._match(codeParams, docParams)) { return; }
 
-      const absFilePath = path.resolve(this._config._dirPath, doc.filePath);
+      const absFilePath = path.resolve(this._mainConfig._dirPath, doc.filePath);
 
       const comment = this._eventbus.triggerSync('tjsdoc:system:ast:file:comment:first:line:from:node:get', doc.node,
        absFilePath);
@@ -164,6 +164,6 @@ export default class LintDocLogger
        * @type {TJSDocConfig}
        * @private
        */
-      this._config = ev.data.config;
+      this._mainConfig = ev.data.mainConfig;
    }
 }

@@ -100,6 +100,8 @@ export default class ConfigData
 
          'publisherOptions': {},
 
+         'publisherOptions._mainMenuLinks': [],
+
          'removeCommonPath': false,
 
          'runtimeOptions': {},
@@ -228,6 +230,8 @@ export default class ConfigData
           (entry) => (typeof entry === 'string' || typeof entry === 'object') && entry !== null },
 
          'publisherOptions': { required: false, test: 'entry', type: 'object' },
+
+         'publisherOptions._mainMenu': { required: false, test: 'array', type: 'object' },
 
          'runtimeOptions': { required: false, test: 'entry', type: 'object' },
 

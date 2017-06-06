@@ -469,7 +469,7 @@ export class DocDB
    {
       this._eventbus = ev.eventbus;
 
-      this._config = this._eventbus.triggerSync('tjsdoc:data:config:get');
+      this._config = this._eventbus.triggerSync('tjsdoc:data:config:main:get');
 
       let eventPrepend = 'tjsdoc';
 

@@ -34,7 +34,7 @@ export default class PublisherRuntime
        * @type {TJSDocConfig}
        * @private
        */
-      this._mainConfig = ev.data.config;
+      this._mainConfig = ev.data.mainConfig;
 
       this._pubConfig = ev.data.pubConfig;
 

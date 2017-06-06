@@ -41,7 +41,7 @@ export default class GenerateDocData
        * @type {TJSDocConfig}
        * @private
        */
-      this._config = ev.data.config;
+      this._mainConfig = ev.data.mainConfig;
 
       /**
        * @type {DocGenerator}
@@ -59,7 +59,7 @@ export default class GenerateDocData
        * The target project current working directory.
        * @type {string}
        */
-      this._rootPath = ev.data.config._dirPath;
+      this._rootPath = ev.data.mainConfig._dirPath;
 
       /**
        * The target project NPM package name.
@@ -145,12 +145,12 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      const relativeFilePath = path.relative(this._config._dirPath, filePath);
+      const relativeFilePath = path.relative(this._mainConfig._dirPath, filePath);
 
       let match = false;
 
       // Match filePath against any includes / excludes RegExp instance.
-      for (const reg of this._config._includes)
+      for (const reg of this._mainConfig._includes)
       {
          if (relativeFilePath.match(reg))
          {
@@ -161,7 +161,7 @@ export default class GenerateDocData
 
       if (!match) { return void 0; }
 
-      for (const reg of this._config._excludes)
+      for (const reg of this._mainConfig._excludes)
       {
          if (relativeFilePath.match(reg)) { return void 0; }
       }
@@ -202,11 +202,11 @@ export default class GenerateDocData
 
       if (typeof docDB !== 'object') { throw new TypeError(`'docDB' is not an 'object'.`); }
 
-      const relativeFilePath = path.relative(this._config._dirPath, filePath);
+      const relativeFilePath = path.relative(this._mainConfig._dirPath, filePath);
 
       let match = false;
 
-      for (const reg of this._config.test._includes)
+      for (const reg of this._mainConfig.test._includes)
       {
          if (relativeFilePath.match(reg))
          {
@@ -217,7 +217,7 @@ export default class GenerateDocData
 
       if (!match) { return void 0; }
 
-      for (const reg of this._config.test._excludes)
+      for (const reg of this._mainConfig.test._excludes)
       {
          if (relativeFilePath.match(reg)) { return void 0; }
       }

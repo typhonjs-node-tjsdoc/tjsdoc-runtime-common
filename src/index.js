@@ -73,7 +73,7 @@ export function onPluginLoad(ev)
 export function onPreGenerate(ev)
 {
    // If doc linting is not enabled then remove LintDocLogger
-   if (!ev.data.config.docLint)
+   if (!ev.data.mainConfig.docLint)
    {
       ev.eventbus.trigger('plugins:remove', 'tjsdoc-lint-doc-logger');
    }
