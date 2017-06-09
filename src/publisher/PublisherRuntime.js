@@ -88,13 +88,8 @@ export default class PublisherRuntime
             packageInfo: this._packageInfo,
             packageObj: this._packageObj,
             pubConfig: this._pubConfig,
-            silent: false,
+            silent: false
          }, options);
-
-         if (typeof pubOptions.minimal === 'boolean' && !pubOptions.minimal)
-         {
-            pubOptions.sourceCoverage = pubOptions.docDB.getSourceCoverage({ includeFiles: true });
-         }
       }
       else
       {
@@ -108,11 +103,16 @@ export default class PublisherRuntime
             pubConfig: this._pubConfig,
             silent: false
          }, options);
-
-         pubOptions.sourceCoverage = pubOptions.docDB.getSourceCoverage({ includeFiles: true });
       }
 
-      this._eventbus.trigger('plugins:invoke:sync:event', 'onHandlePrePublish', void 0, pubOptions);
+      // Allow any plugins to modify pubOptions in `onHandlePrePublish`.
+      pubOptions = this._eventbus.triggerSync('plugins:invoke:sync:event', 'onHandlePrePublish', void 0, pubOptions);
+
+      // Delete plugin manager extra data.
+      delete pubOptions.$$plugin_invoke_count;
+      delete pubOptions.$$plugin_invoke_names;
+
+      // Invoke `onHandlePublish` and `onHandlePostPublish` to finish the publishing process.
       this._eventbus.trigger('plugins:invoke:sync:event', 'onHandlePublish', void 0, pubOptions);
       this._eventbus.trigger('plugins:invoke:sync:event', 'onHandlePostPublish', void 0, pubOptions);
    }
