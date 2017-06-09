@@ -26,7 +26,7 @@ export function onPluginLoad(ev)
    const resolverDataOverride = ev.pluginOptions.resolverData || {};
 
    // Retrieve any publisher resolver data overrides.
-   const pubResolverDataOverride = eventbus.triggerSync('tjsdoc:data:publisher:config:resolver:get') || {};
+   const pubResolverDataOverride = eventbus.triggerSync('tjsdoc:data:config:publisher:resolver:get') || {};
 
    // Instances are being loaded into the plugin manager so auto log filtering needs an explicit filter.
    eventbus.trigger('log:filter:add', {
