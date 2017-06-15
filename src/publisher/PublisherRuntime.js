@@ -15,11 +15,9 @@ export default class PublisherRuntime
     */
    onPluginLoad(ev)
    {
-      const eventbus = ev.eventbus;
+      this._eventbus = ev.eventbus;
 
-      this._eventbus = eventbus;
-
-      eventbus.on('tjsdoc:system:publisher:publish', this.publish, this);
+      this._eventbus.on('tjsdoc:system:publisher:publish', this.publish, this);
    }
 
    /**
