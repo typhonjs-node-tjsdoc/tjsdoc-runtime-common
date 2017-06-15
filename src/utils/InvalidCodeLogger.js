@@ -233,10 +233,14 @@ export default class InvalidCodeLogger
          entry._output += `${headerColor}${entry.parserError.message}[0m\n`;
       }
 
-      const start = entry.parserError.line - 5;
-      const end = entry.parserError.line + 3;
+      const lineStart = entry.parserError.line - 5;
+      const lineEnd = entry.parserError.line + 3;
 
-      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:lines:read', entry.filePath, start, end);
+      const targetLines = this._eventbus.triggerSync('typhonjs:util:file:lines:read', {
+         filePath: entry.filePath,
+         lineStart,
+         lineEnd
+      });
 
       entry._output += `${bodyColor}${targetLines.join('\n')}[0m`;
    }

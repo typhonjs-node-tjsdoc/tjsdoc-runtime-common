@@ -48,6 +48,7 @@ export function onPluginLoad(ev)
          {
             eventPrepend: 'tjsdoc:system',
             logEvent: 'log:info:raw',
+            logPrepend: 'tjsdoc-config-resolver - ',
             resolverData: ConfigData.createResolverData(ev.eventbus, resolverDataOverride, pubResolverDataOverride)
          }
       },

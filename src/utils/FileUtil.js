@@ -37,31 +37,35 @@ export default class FileUtil
        * @param {boolean}  [silent=false] - When false `output: <destPath>` is logged.
        * @param {encoding} [encoding=utf8] - The encoding type.
        */
-      eventbus.on('tjsdoc:system:file:write', (fileData, fileName, silent = false, encoding = 'utf8') =>
+      eventbus.on('tjsdoc:system:file:write',
+       ({ fileData, filePath, logPrepend = '', silent = false, encoding = 'utf8' } = {}) =>
       {
          fileData = eventbus.triggerSync('plugins:invoke:sync:event', 'onHandleWriteFile', void 0,
-          { fileData, fileName }).fileData;
+          { fileData, filePath }).fileData;
 
-         eventbus.trigger('typhonjs:util:file:write', fileData, fileName, silent, encoding);
+         eventbus.trigger('typhonjs:util:file:write', { fileData, filePath, logPrepend, silent, encoding });
       });
 
       /**
        * Helper event binding to create a compressed archive relative to the output destination via `typhonjs-file-util`.
        * This event binding allows `addToParent` to be overridden by `config.separateDataArchives`.
        *
-       * @param {string}   destPath - Destination path and file name; the compress format extension will be appended.
+       * @param {string}   filePath - Destination file path; the compression format extension will be appended.
        *
        * @param {boolean}  [addToParent=true] - If a parent archiver exists then add child archive to it and delete
        *                                        local file.
        *
+       * @param {string}   [logPrepend=''] - A string to prepend any logged output.
+       *
        * @param {boolean}  [silent=false] - When false `output: <destPath>` is logged.
        */
-      eventbus.on('tjsdoc:system:file:archive:create', (destPath, addToParent = true, silent = false) =>
+      eventbus.on('tjsdoc:system:file:archive:create',
+       ({ filePath, addToParent = true, logPrepend = '', silent = false } = {}) =>
       {
          // Allow config parameter `separateDataArchives` to override addToParent.
          addToParent = addToParent && !this._mainConfig.separateDataArchives;
 
-         eventbus.trigger('typhonjs:util:file:archive:create', destPath, addToParent, silent);
+         eventbus.trigger('typhonjs:util:file:archive:create', { filePath, addToParent, logPrepend, silent });
       });
    }
 }
