@@ -63,7 +63,7 @@ export default class PublisherRuntime
     * @param {object}   [options] - Configuration data for the publish action.
     *
     */
-   publish(options = {})
+   async publish(options = {})
    {
       if (typeof options !== 'object')
       {
@@ -104,14 +104,16 @@ export default class PublisherRuntime
       }
 
       // Allow any plugins to modify pubOptions in `onHandlePrePublish`.
-      pubOptions = this._eventbus.triggerSync('plugins:invoke:sync:event', 'onHandlePrePublish', void 0, pubOptions);
+      pubOptions = await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePrePublish', void 0,
+       pubOptions);
 
       // Delete plugin manager extra data.
       delete pubOptions.$$plugin_invoke_count;
       delete pubOptions.$$plugin_invoke_names;
 
       // Invoke `onHandlePublish` and `onHandlePostPublish` to finish the publishing process.
-      this._eventbus.trigger('plugins:invoke:sync:event', 'onHandlePublish', void 0, pubOptions);
-      this._eventbus.trigger('plugins:invoke:sync:event', 'onHandlePostPublish', void 0, pubOptions);
+      await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePublish', void 0, pubOptions);
+
+      await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePostPublish', void 0, pubOptions);
    }
 }
