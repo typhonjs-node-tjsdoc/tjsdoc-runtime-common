@@ -18,7 +18,7 @@ import RegenerateDocData   from './utils/RegenerateDocData.js';
  *
  * @param {PluginEvent} ev - The plugin event.
  */
-export function onPluginLoad(ev)
+export async function onPluginLoad(ev)
 {
    const eventbus = ev.eventbus;
 
@@ -35,7 +35,7 @@ export function onPluginLoad(ev)
       filterString: '(tjsdoc-runtime-common\/dist|tjsdoc-runtime-common\/src)'
    });
 
-   eventbus.trigger('plugins:add:all', [
+   await eventbus.triggerAsync('plugins:add:all:async', [
       // External plugins.
       { name: 'tjsdoc-docs-common', instance: require('tjsdoc-docs-common'), options: { logAutoFilter: false } },
       { name: 'typhonjs-ast-walker', instance: require('typhonjs-ast-walker'), options: { logAutoFilter: false } },
@@ -71,11 +71,11 @@ export function onPluginLoad(ev)
  *
  * @param {PluginEvent} ev - The plugin event.
  */
-export function onPreGenerate(ev)
+export async function onRuntimePreGenerateAsync(ev)
 {
    // If doc linting is not enabled then remove LintDocLogger
    if (!ev.data.mainConfig.docLint)
    {
-      ev.eventbus.trigger('plugins:remove', 'tjsdoc-lint-doc-logger');
+      await ev.eventbus.triggerAsync('plugins:remove:async', 'tjsdoc-lint-doc-logger');
    }
 }

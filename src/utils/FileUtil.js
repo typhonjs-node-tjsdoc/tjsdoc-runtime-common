@@ -8,7 +8,7 @@ export default class FileUtil
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPreGenerate(ev)
+   onRuntimePreGenerateAsync(ev)
    {
       /**
        * @type {TJSDocConfig}
@@ -22,11 +22,12 @@ export default class FileUtil
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPluginLoad(ev)
+   async onPluginLoad(ev)
    {
       const eventbus = ev.eventbus;
 
-      eventbus.trigger('plugins:add', { name: `typhonjs-file-util`, instance: require('typhonjs-file-util') });
+      await eventbus.triggerAsync('plugins:add:async',
+       { name: `typhonjs-file-util`, instance: require('typhonjs-file-util') });
 
       /**
        * Helper event binding to output a file relative to the output destination in addition to allowing plugins to

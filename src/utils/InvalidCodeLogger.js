@@ -311,7 +311,7 @@ export default class InvalidCodeLogger
    /**
     * During the TJSDoc `onComplete` callback log any invalid code warnings / errors.
     */
-   onComplete()
+   onRuntimeCompleteAsync()
    {
       this.logInvalidCode();
    }

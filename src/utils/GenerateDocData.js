@@ -35,7 +35,7 @@ export default class GenerateDocData
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPreGenerate(ev)
+   onRuntimePreGenerateAsync(ev)
    {
       /**
        * @type {TJSDocConfig}

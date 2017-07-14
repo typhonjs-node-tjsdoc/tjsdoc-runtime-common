@@ -94,7 +94,7 @@ export default class LintDocLogger
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onComplete(ev)
+   onRuntimeCompleteAsync(ev)
    {
       if (ev.data.mainConfig.docLint) { this.logWarnings(); }
    }
@@ -157,7 +157,7 @@ export default class LintDocLogger
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPreGenerate(ev)
+   onRuntimePreGenerateAsync(ev)
    {
       /**
        * The target project TJSDoc config.

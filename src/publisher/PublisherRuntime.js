@@ -25,7 +25,7 @@ export default class PublisherRuntime
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPreGenerate(ev)
+   onRuntimePreGenerateAsync(ev)
    {
       /**
        * The TJSDoc config.
@@ -104,16 +104,16 @@ export default class PublisherRuntime
       }
 
       // Allow any plugins to modify pubOptions in `onHandlePrePublish`.
-      pubOptions = await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePrePublish', void 0,
+      pubOptions = await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePrePublishAsync', void 0,
        pubOptions);
 
-      // Delete plugin manager extra data.
+      // Delete plugin manager extra meta data.
       delete pubOptions.$$plugin_invoke_count;
       delete pubOptions.$$plugin_invoke_names;
 
       // Invoke `onHandlePublish` and `onHandlePostPublish` to finish the publishing process.
-      await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePublish', void 0, pubOptions);
+      await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePublishAsync', void 0, pubOptions);
 
-      await this._eventbus.triggerAsync('plugins:invoke:sync:event', 'onHandlePostPublish', void 0, pubOptions);
+      await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePostPublishAsync', void 0, pubOptions);
    }
 }

@@ -65,7 +65,7 @@ export default class RegenerateDocData
     *
     * @param {PluginEvent} ev - The plugin event.
     */
-   onPreGenerate(ev)
+   onRuntimePreGenerateAsync(ev)
    {
       this._mainDocDB = ev.data.docDB;
    }
