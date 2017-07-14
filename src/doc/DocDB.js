@@ -417,7 +417,7 @@ export class DocDB
       // If this DocDB is associated with an eventbus then invoke `onHandleDocObject`.
       if (this._eventbus)
       {
-         this._eventbus.trigger('plugins:invoke:sync:event', 'onHandleDocObject', void 0,
+         this._eventbus.trigger('plugins:sync:invoke:event', 'onHandleDocObject', void 0,
           { docDB: this, docObject, mode: this._mode });
       }
 

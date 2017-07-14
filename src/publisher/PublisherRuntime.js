@@ -104,7 +104,7 @@ export default class PublisherRuntime
       }
 
       // Allow any plugins to modify pubOptions in `onHandlePrePublish`.
-      pubOptions = await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePrePublishAsync', void 0,
+      pubOptions = await this._eventbus.triggerAsync('plugins:async:invoke:event', 'onHandlePrePublishAsync', void 0,
        pubOptions);
 
       // Delete plugin manager extra meta data.
@@ -112,8 +112,8 @@ export default class PublisherRuntime
       delete pubOptions.$$plugin_invoke_names;
 
       // Invoke `onHandlePublish` and `onHandlePostPublish` to finish the publishing process.
-      await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePublishAsync', void 0, pubOptions);
+      await this._eventbus.triggerAsync('plugins:async:invoke:event', 'onHandlePublishAsync', void 0, pubOptions);
 
-      await this._eventbus.triggerAsync('plugins:invoke:async:event', 'onHandlePostPublishAsync', void 0, pubOptions);
+      await this._eventbus.triggerAsync('plugins:async:invoke:event', 'onHandlePostPublishAsync', void 0, pubOptions);
    }
 }

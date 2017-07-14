@@ -35,7 +35,7 @@ export async function onPluginLoad(ev)
       filterString: '(tjsdoc-runtime-common\/dist|tjsdoc-runtime-common\/src)'
    });
 
-   await eventbus.triggerAsync('plugins:add:all:async', [
+   await eventbus.triggerAsync('plugins:async:add:all', [
       // External plugins.
       { name: 'tjsdoc-docs-common', instance: require('tjsdoc-docs-common'), options: { logAutoFilter: false } },
       { name: 'typhonjs-ast-walker', instance: require('typhonjs-ast-walker'), options: { logAutoFilter: false } },
@@ -76,6 +76,6 @@ export async function onRuntimePreGenerateAsync(ev)
    // If doc linting is not enabled then remove LintDocLogger
    if (!ev.data.mainConfig.docLint)
    {
-      await ev.eventbus.triggerAsync('plugins:remove:async', 'tjsdoc-lint-doc-logger');
+      await ev.eventbus.triggerAsync('plugins:async:remove', 'tjsdoc-lint-doc-logger');
    }
 }

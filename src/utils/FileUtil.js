@@ -26,7 +26,7 @@ export default class FileUtil
    {
       const eventbus = ev.eventbus;
 
-      await eventbus.triggerAsync('plugins:add:async',
+      await eventbus.triggerAsync('plugins:async:add',
        { name: `typhonjs-file-util`, instance: require('typhonjs-file-util') });
 
       /**
@@ -41,7 +41,7 @@ export default class FileUtil
       eventbus.on('tjsdoc:system:file:write',
        ({ fileData, filePath, logPrepend = '', silent = false, encoding = 'utf8' } = {}) =>
       {
-         fileData = eventbus.triggerSync('plugins:invoke:sync:event', 'onHandleWriteFile', void 0,
+         fileData = eventbus.triggerSync('plugins:sync:invoke:event', 'onHandleWriteFile', void 0,
           { fileData, filePath }).fileData;
 
          eventbus.trigger('typhonjs:util:file:write', { fileData, filePath, logPrepend, silent, encoding });
