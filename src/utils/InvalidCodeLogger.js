@@ -295,7 +295,7 @@ export default class InvalidCodeLogger
          this._eventbus.trigger('log:error:raw', `[1;31mInvalidCodeLogger errors (internal TJSDoc failure)\n[0m`);
          this._eventbus.trigger('log:error:raw',
           `[1;31mPlease report an issue after checking if a similar one already exists:[0m`);
-         this._eventbus.trigger('log:error:raw', `[1;31mhttps://github.com/typhonjs-doc/tjsdoc/issues[0m`);
+         this._eventbus.trigger('log:error:raw', `[1;31mhttps://github.com/typhonjs-node-tjsdoc/tjsdoc/issues[0m`);
          this._eventbus.trigger('log:error:raw', '================================================');
 
          for (const entry of fatalEntries)
