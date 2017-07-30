@@ -76,6 +76,7 @@ const category =
 {
    cli: false,
    config: false,
+   config_raw_data: false,
    html: false,
    html_doc: false,
    runtime_babylon: false,
