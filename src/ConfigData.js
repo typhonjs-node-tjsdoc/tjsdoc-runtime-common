@@ -100,9 +100,9 @@ export default class ConfigData
 
          'publisherOptions': {},
 
-         'publisherOptions._mainMenuItems': [],
+         'publisherOptions._mainToolbarItems': [],
 
-         'publisherOptions._overflowMenuItems': [],
+         'publisherOptions._mainToolbarOverflowItems': [],
 
          'removeCommonPath': false,
 
